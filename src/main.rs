@@ -44,5 +44,15 @@ fn main() -> ExitCode {
         }
     };
 
+    for (_, var) in p.iter_variable_expr_node() {
+        if p.iter_var_type_in_expr()
+            .find(|(var0, _, _)| *var0 == var)
+            .is_none()
+        {
+            eprintln!("Usage of Undeclared variable");
+            return ExitCode::FAILURE;
+        }
+    }
+
     ExitCode::SUCCESS
 }

@@ -1,3 +1,5 @@
+Pred Absurd: ();
+
 // # The AST, encoded algebraically/relationally.
 Sort TypeNode;
 Sort TypeNodeOpt;
@@ -62,3 +64,229 @@ Func ConsArgList : Var * TypeNodeOpt * ArgList -> ArgList;
 // ## TypeNodeOpt operators.
 Pred NoneTypeNodeOpt : TypeNodeOpt;
 Func SomeTypeNodeOpt : TypeNode -> TypeNodeOpt;
+
+
+// # Semantic types.
+//
+// Elements of this sort represent semantic types. For example, every TypeNode described an
+// associated semantic Type, and every expression has an associated Type.
+
+// For now, this is an opaque sort. We will add operations, for example a Number type constant, in
+// later versions of the type checker.
+Sort Type;
+
+
+// # Variable resolution.
+//
+// For each node kind X in which variables matter, we introduce a partial function
+//
+//   VarTypeInX : Var * X -> Type
+//
+// and add axioms such that VarTypeInX(var, n) = sigma iff var is considered to be in scope for
+// node n. sigma can be an opaque Type element. That var must be in scope for n means that var must
+// have been introduced *before* n; it is not sufficient for n to introduce the variable.
+//
+// For X = StmtNodeList and X = ArgList, note that if n = ConsX(head, tail), then head appears
+// before tail in source code. For example, if body is the StmtNodeList representing the body of a
+// function, then none of the variables introduced in the body will be in scope for body. Instead,
+// all of those variables are in scope at the NilStmtNodeList of body. Similarly, if args is the
+// ArgList of a function definition, then the variables listed in args are only in scope for the
+// NilArgList at the root of args.
+Func VarTypeInStmts : Var * StmtNodeList -> Type;
+Func VarTypeInFunction : Var * FunctionNode -> Type;
+Func VarTypeInArgList : Var * ArgList -> Type;
+Func VarTypeInExpr : Var * ExprNode -> Type;
+Func VarTypeInExprs : Var * ExprNodeList -> Type;
+
+// ## Base cases: Nodes that introduce variables
+
+// Every let statements introduces a variable.
+Axiom
+    ConsStmtNodeList(head, tail)!
+    & LetStmtNode(head, var, _)
+    =>
+    VarTypeInStmts(var, tail)!
+    ;
+
+// Every function statement introduces a variable for statements occuring after the function
+// statement.
+Axiom
+    ConsStmtNodeList(head, tail)!
+    & FunctionStmtNode(head, func)
+    & Function(func, var, _, _ ,_)
+    =>
+    VarTypeInStmts(var, tail)!
+    ;
+
+// Every function node introduces the name of the function in the ArgList of the function (and
+// hence, by the propagation axioms below, also in the body of the function).
+Axiom
+    Function(_, var, arg, _ ,_)
+    =>
+    VarTypeInArgList(var, arg)!
+    ;
+
+// Every function argument introduces a variable.
+Axiom
+    ConsArgList(var, _, tail)!
+    =>
+    VarTypeInArgList(var, tail)!
+    ;
+
+// ## Errors due to multiple introductions of the same variable
+//
+// For each base node case that introduces a variable, it is an error if the variable is already in
+// scope before the node.
+
+Axiom LetStmtNode(head, var, _) & VarTypeInStmts(var, ConsStmtNodeList(head, _))! => Absurd();
+Axiom
+    FunctionStmtNode(head, func)
+    & Function(func, var, _, _ ,_)
+    & VarTypeInStmts(var, ConsStmtNodeList(head, _))!
+    =>
+    Absurd()
+    ;
+Axiom Function(func, var, _, _, _) & VarTypeInFunction(var, func)! => Absurd();
+Axiom VarTypeInArgList(var, ConsArgList(var, _, _))! => Absurd();
+
+// ## Propagation of variables through lists
+//
+// If a variable is in scope for ConsX(head, tail), then it should also be in scope for tail.
+
+Axiom VarTypeInStmts(var, tail) ~> VarTypeInStmts(var, ConsStmtNodeList(_, tail));
+Axiom VarTypeInArgList(var, tail) ~> VarTypeInArgList(var, ConsArgList(_, _, tail));
+Axiom VarTypeInExprs(var, tail) ~> VarTypeInExprs(var, ConsExprNodeList(_, tail));
+
+// ## Propagating variables through nodes
+//
+// If a variable is in scope before some node n, then it is usually also in scope at all nodes that
+// make up n.
+
+// ### Propagating into function bodies
+//
+// Apart from the variables propagated from outside of the scope of a function literal (which will
+// be propagated later), the variables accessible in a function body are as follows:
+// 1. The variables defined in the ambient scope of the function definition.
+// 2. The name of the function (for recursive calls).
+// 3. Function arguments.
+//
+// We propagate 1 and 2 into 3, and 3 into the function body.
+
+// Propagate ambient variables into arg lists.
+Axiom
+    Function(func, _, args, _, _)
+    =>
+    VarTypeInArgList(var, args)
+    ~>
+    VarTypeInFunction(var, func)
+    ;
+
+// Propagate function names into arg lists.
+Axiom
+    Function(_, var, args, _, _)
+    =>
+    VarTypeInArgList(var, args)!
+    ;
+
+// By the "root" of a node list l we mean the unique nil node from which l can be obtained by
+// repeated consing. We need access to the root of an ArgList so that we know the full set of
+// variables introduced in that arg list.
+
+// The axioms are such that RootNilArgList is total if every arg list is Nil or Cons (and not
+// opaque).
+Func RootNilArgList : ArgList -> ArgList;
+Axiom NilArgList(args) => RootNilArgList(args) = args;
+Axiom RootNilArgList(ConsArgList(_, _, tail)) ~> RootNilArgList(tail);
+
+// Propagate variables from the arg list into the body.
+Axiom
+    Function(_, _, args, _, body)
+    =>
+    VarTypeInStmts(var, body)
+    ~>
+    VarTypeInArgList(var, RootNilArgList(args))
+    ;
+
+// ### Propagating variables through statements
+
+// If a variable is in scope in the statement that defines a function, then the variable is also in
+// scope of the ArgList of that function (which then means that it is in scope for the body).
+Axiom
+    stmts = ConsStmtNodeList(head, _)
+    & FunctionStmtNode(head, func)
+    =>
+    VarTypeInFunction(var, func)
+    ~>
+    VarTypeInStmts(var, stmts)
+    ;
+
+// Propagate variables through if statements.
+Axiom
+    stmts = ConsStmtNodeList(head, _)
+    & IfStmtNode(head, cond, true_branch, false_branch)
+    & VarTypeInStmts(var, stmts) = sigma
+    =>
+    VarTypeInExpr(var, cond) = sigma
+    & VarTypeInStmts(var, true_branch) = sigma
+    & VarTypeInStmts(var, false_branch) = sigma
+    ;
+
+// Propagate variables through while statements.
+Axiom
+    stmts = ConsStmtNodeList(head, _)
+    & WhileStmtNode(head, _, body)
+    =>
+    VarTypeInStmts(var, body)
+    ~>
+    VarTypeInStmts(var, stmts)
+    ;
+
+// Propagate variables through expression statements.
+Axiom
+    stmts = ConsStmtNodeList(head, _)
+    & ExprStmtNode(head, expr)
+    =>
+    VarTypeInExpr(var, expr)
+    ~>
+    VarTypeInStmts(var, stmts)
+    ;
+
+// Propagate previously defined variables through let statements into initializer expressions.
+Axiom
+    stmts = ConsStmtNodeList(head, _)
+    & LetStmtNode(head, _, expr)
+    =>
+    VarTypeInExpr(var, expr)
+    ~>
+    VarTypeInStmts(var, stmts)
+    ;
+
+// Propagate variables through return statements.
+Axiom
+    stmts = ConsStmtNodeList(head, _)
+    & ReturnStmtNode(head, expr)
+    =>
+    VarTypeInExpr(var, expr)
+    ~>
+    VarTypeInStmts(var, stmts)
+    ;
+
+// ### Propagating variables through expressions
+
+// Propagate variables through function application expressions.
+Axiom
+    AppExprNode(expr, func, args)
+    & VarTypeInExpr(var, expr) = sigma
+    =>
+    VarTypeInExpr(var, func) = sigma
+    & VarTypeInExprs(var, args) = sigma
+    ;
+
+// Propagate variables through function expression.
+Axiom
+    FunctionExprNode(expr, func)
+    =>
+    VarTypeInFunction(var, func)
+    ~>
+    VarTypeInExpr(var, expr)
+    ;
