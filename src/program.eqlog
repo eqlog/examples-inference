@@ -67,13 +67,96 @@ Func SomeTypeNodeOpt : TypeNode -> TypeNodeOpt;
 
 
 // # Semantic types.
-//
-// Elements of this sort represent semantic types. For example, every TypeNode described an
-// associated semantic Type, and every expression has an associated Type.
-
-// For now, this is an opaque sort. We will add operations, for example a Number type constant, in
-// later versions of the type checker.
 Sort Type;
+Sort TypeList;
+
+// ## Semantic type operators.
+Func VoidType : Type;
+Func BooleanType : Type;
+Func NumberType : Type;
+Func StringType : Type;
+// FunctionType(node, domain, codomain)
+Func FunctionType : TypeList * Type -> Type;
+// Inverses to FunctionType:
+// - DomainTypes(FunctionType(domain, _)) = domain
+// - CodomainType(FunctionType(_, codomain)) = codomain
+Func DomainTypes : Type -> TypeList;
+Func CodomainType : Type -> Type;
+
+Axiom DomainTypes(tau)! => CodomainType(tau)!;
+Axiom CodomainType(tau)! => DomainTypes(tau)!;
+Axiom DomainTypes(FunctionType(domain, _)) ~> domain;
+Axiom CodomainType(FunctionType(_, codomain)) ~> codomain;
+Axiom FunctionType(DomainTypes(tau), CodomainType(tau)) ~> tau;
+
+// ## TypeList operators.
+// We're equating TypeList elements sometimes. In well-typed programs, this is only possible if the
+// type lists have the same length and are made up of the same Types.
+Func NilTypeList : TypeList;
+Func ConsTypeList : Type * TypeList -> TypeList;
+Axiom NilTypeList() = ConsTypeList(_, _) => Absurd();
+Axiom ConsTypeList(head_0, tail_0) = ConsTypeList(head_1, tail_1) => head_0 = head_1 & tail_0 = tail_1;
+
+// ## Joint injectivity of type operators.
+Axiom VoidType() = BooleanType() => Absurd();
+Axiom VoidType() = NumberType() => Absurd();
+Axiom VoidType() = StringType() => Absurd();
+Axiom VoidType() = FunctionType(_, _) => Absurd();
+
+Axiom BooleanType() = NumberType() => Absurd();
+Axiom BooleanType() = StringType() => Absurd();
+Axiom BooleanType() = FunctionType(_, _) => Absurd();
+
+Axiom NumberType() = StringType() => Absurd();
+Axiom NumberType() = FunctionType(_, _) => Absurd();
+
+Axiom StringType() = FunctionType(_, _) => Absurd();
+
+Axiom
+    FunctionType(domain_0, codomain_0) = FunctionType(domain_1, codomain_1)
+    =>
+    domain_0 = domain_1
+    & codomain_0 = codomain_1
+    ;
+
+// ## Functions assigning to node elements their corresponding semantic Type elements.
+Func SemanticType : TypeNode -> Type;
+Func SemanticTypeOpt : TypeNodeOpt -> Type;
+Func SemanticArgTypes : ArgList -> TypeList;
+
+Axiom tn: TypeNode => SemanticType(tn)!;
+Axiom tno: TypeNodeOpt => SemanticTypeOpt(tno)!;
+Axiom ag: ArgList => SemanticArgTypes(ag)!;
+
+// Since another axiom enforces that SemanticType is total, these rules will fire for all
+// TypeNodes.
+Axiom VoidTypeNode(tn) => VoidType() ~> SemanticType(tn);
+Axiom BooleanTypeNode(tn) => BooleanType() ~> SemanticType(tn);
+Axiom NumberTypeNode(tn) => NumberType() ~> SemanticType(tn);
+Axiom StringTypeNode(tn) => StringType() ~> SemanticType(tn);
+// Other axioms assert that SemanticArgTypes and SemanticType are total functions, so this rule
+// will fire for al FunctionTypeNodes.
+Axiom
+    FunctionTypeNode(tn, args, codomain)
+    =>
+    FunctionType(SemanticArgTypes(args), SemanticType(codomain))
+    ~>
+    SemanticType(tn)
+    ;
+
+// SemanticTypeOpt is total, but only for SomeTypeNodeOpt elements does it have a determined type.
+// If no other rules apply, it will be an opaque Type element determined only by the TypeNodeOpt
+// element.
+Axiom SemanticType(tn) ~> SemanticTypeOpt(SomeTypeNodeOpt(tn));
+
+Axiom NilArgList(al) => NilTypeList() ~> SemanticArgTypes(al);
+Axiom
+    al = ConsArgList(_, head_type, tail)
+    =>
+    ConsTypeList(SemanticTypeOpt(head_type), SemanticArgTypes(tail))
+    ~>
+    SemanticArgTypes(al)
+    ;
 
 
 // # Variable resolution.
