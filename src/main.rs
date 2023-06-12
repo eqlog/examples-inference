@@ -44,5 +44,12 @@ fn main() -> ExitCode {
         }
     };
 
+    p.close();
+
+    if p.absurd() {
+        eprintln!("Type checking error");
+        return ExitCode::FAILURE;
+    }
+
     ExitCode::SUCCESS
 }
