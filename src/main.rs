@@ -6,6 +6,7 @@ lalrpop_mod!(grammar);
 #[allow(dead_code)]
 mod debugging;
 
+#[allow(unused_imports)]
 use crate::debugging::*;
 use crate::grammar::ProgramParser;
 use crate::grammar_util::Literals;
@@ -37,7 +38,7 @@ fn main() -> ExitCode {
     let mut p = Program::new();
     let mut literals = Literals::new();
 
-    let stmts: StmtNodeList = match ProgramParser::new().parse(&mut p, &mut literals, &contents) {
+    match ProgramParser::new().parse(&mut p, &mut literals, &contents) {
         Ok(stmts) => stmts,
         Err(err) => {
             eprintln!("Syntax error: {err}");
@@ -61,14 +62,6 @@ fn main() -> ExitCode {
             return ExitCode::FAILURE;
         }
     }
-
-    let id3_type = var_type(*literals.vars.get("id3").unwrap(), &p);
-    println!("id3 type:");
-    print_type(id3_type, &p, Indent(0));
-
-    let u_type = var_type(*literals.vars.get("u").unwrap(), &p);
-    println!("u type:");
-    print_type(u_type, &p, Indent(0));
 
     ExitCode::SUCCESS
 }
