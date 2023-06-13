@@ -26,18 +26,3 @@ function id_number(x) {
 function id(y) {
   return y;
 }
-
-function id2(z) {
-  return id2(id)(z);
-}
-
-function id3(u) {
-  if (true) {
-    return u;
-  } else {
-    return id3(id3)(u);
-  }
-}
-
-id2(5);
-id2('xyz');
