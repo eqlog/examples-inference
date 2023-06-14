@@ -181,22 +181,27 @@ Func VarTypeInArgList : Var * ArgList -> Type;
 Func VarTypeInExpr : Var * ExprNode -> Type;
 Func VarTypeInExprs : Var * ExprNodeList -> Type;
 
+// Forward declaration of the function assigning semantic types to expressions.
+Func ExprType : ExprNode -> Type;
+
 // ## Base cases: Nodes that introduce variables
 
 // Every let statements introduces a variable.
 Axiom
     ConsStmtNodeList(head, tail)!
-    & LetStmtNode(head, var, _)
+    & LetStmtNode(head, var, expr)
     =>
-    VarTypeInStmts(var, tail)!
+    VarTypeInStmts(var, tail)
+    ~>
+    ExprType(expr)
     ;
 
 // Every function statement introduces a variable for statements occuring after the function
 // statement.
 Axiom
     ConsStmtNodeList(head, tail)!
-    & FunctionStmtNode(head, func)
-    & Function(func, var, _, _ ,_)
+    & FunctionStmtNode(head, _)
+    & Function(_, var, _, _ ,_)
     =>
     VarTypeInStmts(var, tail)!
     ;
@@ -211,9 +216,11 @@ Axiom
 
 // Every function argument introduces a variable.
 Axiom
-    ConsArgList(var, _, tail)!
+    ConsArgList(var, tno, tail)!
     =>
-    VarTypeInArgList(var, tail)!
+    VarTypeInArgList(var, tail)
+    ~>
+    SemanticTypeOpt(tno)
     ;
 
 // ## Errors due to multiple introductions of the same variable
@@ -373,3 +380,40 @@ Axiom
     ~>
     VarTypeInExpr(var, expr)
     ;
+
+// # Expression typing.
+// Declared earlier:
+// Func ExprType : ExprNode -> Type;
+Func ExprTypes : ExprNodeList -> TypeList;
+
+// Both ExprType and ExprTypes are total. Our axioms enforce that ExprTypes is given by mapping
+// ExprType on each ExprNode element.
+Axiom expr: ExprNode => ExprType(expr)!;
+Axiom exprs: ExprNodeList => ExprTypes(exprs)!;
+
+Axiom NilExprNodeList(exprs) => NilTypeList() ~> ExprTypes(exprs);
+Axiom
+    exprs = ConsExprNodeList(head, tail)
+    =>
+    ConsTypeList(ExprType(head), ExprTypes(tail))
+    ~>
+    ExprTypes(exprs)
+    ;
+
+// ## Typing constraints from usage of expressions in statements.
+Axiom IfStmtNode(_, cond, _, _) => BooleanType() ~> ExprType(cond);
+Axiom WhileStmtNode(_, cond, _) => BooleanType() ~> ExprType(cond);
+
+// ## Typing constraints of expression from usages in other expression.
+Axiom VariableExprNode(expr, var) & VarTypeInExpr(var, expr) = sigma => ExprType(expr) = sigma;
+Axiom VoidExprNode(expr) => VoidType() ~> ExprType(expr);
+Axiom FalseExprNode(expr) => BooleanType() ~> ExprType(expr);
+Axiom TrueExprNode(expr) => BooleanType() ~> ExprType(expr);
+Axiom StringLiteralExprNode(expr, _) => StringType() ~> ExprType(expr);
+Axiom NumberLiteralExprNode(expr, _) => NumberType() ~> ExprType(expr);
+
+// The conclusions of these axioms assert that DomainTypes or CodomainType are defined on some
+// types tau. By the axioms relating these functions to FunctionType, this means that such types
+// tau must be function types.
+Axiom AppExprNode(_, func, args) => DomainTypes(ExprType(func)) ~> ExprTypes(args);
+Axiom AppExprNode(expr, func, _) => CodomainType(ExprType(func)) ~> ExprType(expr);
