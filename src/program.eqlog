@@ -181,8 +181,10 @@ Func VarTypeInArgList : Var * ArgList -> Type;
 Func VarTypeInExpr : Var * ExprNode -> Type;
 Func VarTypeInExprs : Var * ExprNodeList -> Type;
 
-// Forward declaration of the function assigning semantic types to expressions.
+// Forward declarations of the function assigning semantic types to expression and function
+// literals.
 Func ExprType : ExprNode -> Type;
+Func FunctionNodeType : FunctionNode -> Type;
 
 // ## Base cases: Nodes that introduce variables
 
@@ -200,18 +202,22 @@ Axiom
 // statement.
 Axiom
     ConsStmtNodeList(head, tail)!
-    & FunctionStmtNode(head, _)
-    & Function(_, var, _, _ ,_)
+    & FunctionStmtNode(head, func)
+    & Function(func, var, _, _ ,_)
     =>
-    VarTypeInStmts(var, tail)!
+    VarTypeInStmts(var, tail)
+    ~>
+    FunctionNodeType(func)
     ;
 
 // Every function node introduces the name of the function in the ArgList of the function (and
 // hence, by the propagation axioms below, also in the body of the function).
 Axiom
-    Function(_, var, arg, _ ,_)
+    Function(func, var, arg, _ ,_)
     =>
-    VarTypeInArgList(var, arg)!
+    VarTypeInArgList(var, arg)
+    ~>
+    FunctionNodeType(func)
     ;
 
 // Every function argument introduces a variable.
@@ -273,9 +279,11 @@ Axiom
 
 // Propagate function names into arg lists.
 Axiom
-    Function(_, var, args, _, _)
+    Function(func, var, args, _, _)
     =>
-    VarTypeInArgList(var, args)!
+    VarTypeInArgList(var, args)
+    ~>
+    FunctionNodeType(func)
     ;
 
 // By the "root" of a node list l we mean the unique nil node from which l can be obtained by
@@ -417,3 +425,138 @@ Axiom NumberLiteralExprNode(expr, _) => NumberType() ~> ExprType(expr);
 // tau must be function types.
 Axiom AppExprNode(_, func, args) => DomainTypes(ExprType(func)) ~> ExprTypes(args);
 Axiom AppExprNode(expr, func, _) => CodomainType(ExprType(func)) ~> ExprType(expr);
+
+Axiom FunctionExprNode(expr, func) => FunctionNodeType(func) ~> ExprType(expr);
+
+// # Type analysis of function definitions
+//
+// ## Reachability
+//
+// To detect whether a function has an implicit `return ();` in the end, we need to decide whether
+// the execution flow can reach the end of the function. Obviously this is undecidable in the
+// general case; our type system will thus consider this possible if there is a control flow path
+// through the function that does not traverse a return statement.
+
+// CanProceedStmt(stmt) is true if execution can flow past this statement. CanProceedStmts(stmts)
+// is true if CanProceed holds for all statements in stmts.
+Pred CanProceedStmt : StmtNode;
+Pred CanProceedStmts : StmtNodeList;
+
+Axiom NilStmtNodeList(stmts) => CanProceedStmts(stmts);
+Axiom
+    stmts = ConsStmtNodeList(head, tail)
+    & CanProceedStmt(head)
+    & CanProceedStmts(tail)
+    =>
+    CanProceedStmts(stmts);
+
+Axiom ExprStmtNode(stmt, _) => CanProceedStmt(stmt);
+Axiom LetStmtNode(stmt, _, _) => CanProceedStmt(stmt);
+// ReturnStmtNode does not proceed.
+// ReturnVoidStmtNode does not proceed.
+Axiom FunctionStmtNode(stmt, _) => CanProceedStmt(stmt);
+// An IfStmtNode can proceed if at least one of the two branches can proceed.
+Axiom IfStmtNode(stmt, _, true_branch, _) & CanProceedStmts(true_branch) => CanProceedStmt(stmt);
+Axiom IfStmtNode(stmt, _, _, false_branch) & CanProceedStmts(false_branch) => CanProceedStmt(stmt);
+Axiom WhileStmtNode(stmt, _, _) => CanProceedStmt(stmt);
+
+// ## Explicit teturn type analysis
+// Here we analyze which types the expression in explicitly return statements among a list of
+// statements have. The list of statements need not be the full body of a function, so we only care
+// about explicit returns, not the possible implicit `return ();` at the end of a function.
+// However, every list of statements can at most return expressions of a single type, so we can
+// model `ReturnsType` as a partial function.
+Func ReturnsType : StmtNodeList -> Type;
+
+// If there is any suffix of a statement list that can return a given type, then the full list can
+// return that type.
+Axiom ReturnsType(ConsStmtNodeList(_, tail)) ~> ReturnsType(tail);
+
+// Base cases for return statements with and without (i.e. void) expressions.
+Axiom
+    stmts = ConsStmtNodeList(head, _)
+    & ReturnStmtNode(head, return_value)
+    =>
+    ReturnsType(stmts) ~> ExprType(return_value)
+    ;
+Axiom
+    stmts = ConsStmtNodeList(head, _)
+    & ReturnVoidStmtNode(head)
+    =>
+    VoidType()!
+    & ReturnsType(stmts) = VoidType();
+
+// An if statement can return a type if at least one of its two branches returns that type.
+Axiom
+    stmts = ConsStmtNodeList(head, _)
+    & IfStmtNode(head, _, true_branch, _)
+    =>
+    ReturnsType(stmts) ~> ReturnsType(true_branch)
+    ;
+Axiom
+    stmts = ConsStmtNodeList(head, _)
+    & IfStmtNode(head, _, _, false_branch)
+    =>
+    ReturnsType(stmts) ~> ReturnsType(false_branch)
+    ;
+
+// An while statement can return a type if its body can return that type.
+Axiom
+    stmts = ConsStmtNodeList(head, _)
+    & WhileStmtNode(head, _, body)
+    =>
+    ReturnsType(stmts) ~> ReturnsType(body)
+    ;
+
+// ## Tying it together.
+
+// Declared earlier:
+// FunctionNodeType : FunctionNode -> Type
+
+// FunctionNodeType is total and always yields a function type.
+Axiom
+    func: FunctionNode
+    =>
+    FunctionNodeType(func)!
+    & DomainTypes(FunctionNodeType(func))!
+    & CodomainType(FunctionNodeType(func))!
+    ;
+
+// Typing constraints due to the types of function variables. Note that the types of argument
+// variables as given by VarInArgList were previously unified with the optional type annotation (an
+// opaque Type element if no annotation was given), which in turn were unified with the types
+// appearing SemanticArgTypes.
+Axiom
+    Function(func, _, args, _, _)
+    =>
+    SemanticArgTypes(args)
+    ~>
+    DomainTypes(FunctionNodeType(func))
+    ;
+
+// Typing constraints due to an explicit codomain annotation.
+Axiom
+    Function(func, _, _, codomain, _)
+    =>
+    SemanticTypeOpt(codomain) ~> CodomainType(FunctionNodeType(func))
+    ;
+
+// Typing constraints due to explicit return statements.
+Axiom
+    Function(func, _, _, _, body)
+    =>
+    ReturnsType(body)
+    ~>
+    CodomainType(FunctionNodeType(func))
+    ;
+
+// An implicit Void return type in case we cannot infer that the function body must
+// always reach an explicit return statement.
+Axiom
+    Function(func, _, _, _, body)
+    & CanProceedStmts(body)
+    =>
+    VoidType()
+    ~>
+    CodomainType(FunctionNodeType(func))
+    ;
