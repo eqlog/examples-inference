@@ -57,13 +57,13 @@ Func ConsExprNodeList : ExprNode * ExprNodeList -> ExprNodeList;
 Pred NilStmtNodeList : StmtNodeList;
 Func ConsStmtNodeList : StmtNode * StmtNodeList -> StmtNodeList;
 
-// ## TypeNodeOpt operators.
-Pred NoneTypeNodeOpt : TypeNodeOpt;
-Func SomeTypeNodeOpt : TypeNode -> TypeNodeOpt;
-
 // ## ArgList operators.
 Pred NilArgList : ArgList;
 Func ConsArgList : Var * TypeNodeOpt * ArgList -> ArgList;
+
+// ## TypeNodeOpt operators.
+Pred NoneTypeNodeOpt : TypeNodeOpt;
+Func SomeTypeNodeOpt : TypeNode -> TypeNodeOpt;
 
 
 // # Semantic types.
@@ -164,7 +164,7 @@ Axiom
 // For each node kind X in which variables matter, we introduce a partial function
 //
 //   VarTypeInX : Var * X -> Type
-// 
+//
 // and add axioms such that VarTypeInX(var, n) = sigma iff var is considered to be in scope for
 // node n. sigma can be an opaque Type element. That var must be in scope for n means that var must
 // have been introduced *before* n; it is not sufficient for n to introduce the variable.
@@ -174,14 +174,14 @@ Axiom
 // function, then none of the variables introduced in the body will be in scope for body. Instead,
 // all of those variables are in scope at the NilStmtNodeList of body. Similarly, if args is the
 // ArgList of a function definition, then the variables listed in args are only in scope for the
-// NilArgList at the root of args. 
+// NilArgList at the root of args.
 Func VarTypeInStmts : Var * StmtNodeList -> Type;
 Func VarTypeInFunction : Var * FunctionNode -> Type;
 Func VarTypeInArgList : Var * ArgList -> Type;
 Func VarTypeInExpr : Var * ExprNode -> Type;
 Func VarTypeInExprs : Var * ExprNodeList -> Type;
 
-// Forward declaration of the function assigning semantic types to expression and function
+// Forward declarations of the function assigning semantic types to expression and function
 // literals.
 Func ExprType : ExprNode -> Type;
 Func FunctionNodeType : FunctionNode -> Type;
@@ -375,7 +375,7 @@ Axiom
 Axiom
     AppExprNode(expr, func, args)
     & VarTypeInExpr(var, expr) = sigma
-    => 
+    =>
     VarTypeInExpr(var, func) = sigma
     & VarTypeInExprs(var, args) = sigma
     ;
@@ -447,7 +447,7 @@ Axiom
     stmts = ConsStmtNodeList(head, tail)
     & CanProceedStmt(head)
     & CanProceedStmts(tail)
-    => 
+    =>
     CanProceedStmts(stmts);
 
 Axiom ExprStmtNode(stmt, _) => CanProceedStmt(stmt);
@@ -533,7 +533,7 @@ Axiom
     ~>
     DomainTypes(FunctionNodeType(func))
     ;
- 
+
 // Typing constraints due to an explicit codomain annotation.
 Axiom
     Function(func, _, _, codomain, _)

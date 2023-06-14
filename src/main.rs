@@ -3,8 +3,6 @@ use lalrpop_util::lalrpop_mod;
 eqlog_mod!(program);
 mod grammar_util;
 lalrpop_mod!(grammar);
-#[allow(dead_code)]
-mod debugging;
 
 #[allow(unused_imports)]
 use crate::debugging::*;
@@ -17,6 +15,8 @@ use std::process::ExitCode;
 
 fn main() -> ExitCode {
     let mut args = env::args();
+
+    // The first argument is the path to this executable; we ignore it.
     args.next();
 
     let file_name: String = match args.next() {
