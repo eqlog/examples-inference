@@ -462,6 +462,14 @@ Axiom
 // Every function statement introduces a variable for statements occuring after the function
 // statement.
 Axiom
+    ConsStmtNodeList(head, _)!
+    & FunctionStmtNode(head, func)
+    & ctx = StmtTypeContext(head)
+    & Function(func, _, _, _ ,_)
+    =>
+    PolyType(ctx, FunctionNodeType(func))!
+    ;
+Axiom
     ConsStmtNodeList(head, tail)!
     & FunctionStmtNode(head, func)
     & ctx = StmtTypeContext(head)
