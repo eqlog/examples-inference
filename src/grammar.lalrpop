@@ -63,14 +63,15 @@ Intersperse<Item, Separator>: Vec<Item> = {
     () => vec![],
 }
 
-Arg: (Var, TypeNodeOpt) = {
+
+VarOptType: (Var, TypeNodeOpt) = {
     <var: Var> <ty: PairSecond<":", Type>?> => {
         let ty: TypeNodeOpt = type_node_opt(ty, p);
         (var, ty)
     }
 }
 ArgList: ArgList = {
-    "(" <args: Intersperse<Arg, ",">> ")" => {
+    "(" <args: Intersperse<VarOptType, ",">> ")" => {
         arg_list(args.as_slice(), p)
     }
 }
@@ -176,9 +177,10 @@ Stmt: StmtNode = {
         p.insert_expr_stmt_node(stmt, expr);
         stmt
     },
-    "let" <var: Var> "=" <value: Expr> ";" => {
+    "let" <var_opt_type : VarOptType> "=" <value: Expr> ";" => {
+        let (var, opt_type) = var_opt_type;
         let stmt = p.new_stmt_node();
-        p.insert_let_stmt_node(stmt, var, value);
+        p.insert_let_stmt_node(stmt, var, opt_type, value);
         stmt
     },
     "return" <expr: Expr> ";" => {
