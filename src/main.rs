@@ -3,10 +3,12 @@ use lalrpop_util::lalrpop_mod;
 eqlog_mod!(program);
 mod grammar_util;
 lalrpop_mod!(grammar);
+#[allow(unused)]
+mod debugging;
 
 #[allow(unused_imports)]
 use crate::debugging::*;
-use crate::grammar::ProgramParser;
+use crate::grammar::ModuleParser;
 use crate::grammar_util::Literals;
 use crate::program::*;
 use std::env;
@@ -38,8 +40,8 @@ fn main() -> ExitCode {
     let mut p = Program::new();
     let mut literals = Literals::new();
 
-    match ProgramParser::new().parse(&mut p, &mut literals, &contents) {
-        Ok(stmts) => stmts,
+    match ModuleParser::new().parse(&mut p, &mut literals, &contents) {
+        Ok(_) => (),
         Err(err) => {
             eprintln!("Syntax error: {err}");
             return ExitCode::FAILURE;

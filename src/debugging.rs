@@ -149,7 +149,7 @@ pub fn print_type(t: Type, p: &Program, indent: Indent) {
     println!("{indent}- Type({t0})");
 }
 
-pub fn var_type(var: Var, p: &Program) -> Type {
+pub fn var_type(var: Var, p: &Program) -> GenericType {
     let mut vts = p
         .iter_var_type_in_stmts()
         .filter(|(var0, _, _)| *var0 == var);
@@ -159,7 +159,10 @@ pub fn var_type(var: Var, p: &Program) -> Type {
     };
 
     for (_, _, ty0) in vts {
-        assert!(p.are_equal_type(ty, ty0), "Variable type not unique");
+        assert!(
+            p.are_equal_generic_type(ty, ty0),
+            "Variable type not unique"
+        );
     }
 
     ty
