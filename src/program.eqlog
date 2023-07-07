@@ -35,7 +35,7 @@ Pred FunctionExprNode : ExprNode * FunctionNode;
 
 Pred ExprStmtNode : StmtNode * ExprNode;
 // LetStmtNode(node, var, initial_value)
-Pred LetStmtNode : StmtNode * Var * ExprNode;
+Pred LetStmtNode : StmtNode * Var * TypeNodeOpt * ExprNode;
 // ReturnStmtNode(node, return_value)
 Pred ReturnStmtNode : StmtNode * ExprNode;
 Pred ReturnVoidStmtNode : StmtNode;
