@@ -9,6 +9,7 @@ edition = "2021"
 lalrpop-util = { version = "0", features = [ "lexer" ] }
 regex = { version = "1", features = ["unicode-perl"] }
 eqlog-runtime = "0"
+itertools = "0"
 
 [build-dependencies]
 lalrpop = { version = "0", features = [ "lexer" ] }
