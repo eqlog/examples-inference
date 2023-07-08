@@ -1,4 +1,4 @@
-let k = 5;
+let k: number = 5;
 
 function asdf() {
   if (true) { 

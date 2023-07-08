@@ -37,7 +37,7 @@ Pred FunctionExprNode : ExprNode * FunctionNode;
 
 Pred ExprStmtNode : StmtNode * ExprNode;
 // LetStmtNode(node, var, initial_value)
-Pred LetStmtNode : StmtNode * Var * ExprNode;
+Pred LetStmtNode : StmtNode * Var * TypeNodeOpt * ExprNode;
 // ReturnStmtNode(node, return_value)
 Pred ReturnStmtNode : StmtNode * ExprNode;
 Pred ReturnVoidStmtNode : StmtNode;
@@ -189,11 +189,11 @@ Func ExprType : ExprNode -> Type;
 // Every let statements introduces a variable.
 Axiom
     ConsStmtNodeList(head, tail)!
-    & LetStmtNode(head, var, expr)
+    & LetStmtNode(head, var, tno, expr)
+    & expr_type = ExprType(expr)
     =>
-    VarTypeInStmts(var, tail)
-    ~>
-    ExprType(expr)
+    expr_type = SemanticTypeOpt(tno)
+    & VarTypeInStmts(var, tail) = expr_type
     ;
 
 // Every function statement introduces a variable for statements occuring after the function
@@ -228,7 +228,7 @@ Axiom
 // For each base node case that introduces a variable, it is an error if the variable is already in
 // scope before the node.
 
-Axiom LetStmtNode(head, var, _) & VarTypeInStmts(var, ConsStmtNodeList(head, _))! => Absurd();
+Axiom LetStmtNode(head, var, _, _) & VarTypeInStmts(var, ConsStmtNodeList(head, _))! => Absurd();
 Axiom
     FunctionStmtNode(head, func)
     & Function(func, var, _, _ ,_)
@@ -344,7 +344,7 @@ Axiom
 // Propagate previously defined variables through let statements into initializer expressions.
 Axiom
     stmts = ConsStmtNodeList(head, _)
-    & LetStmtNode(head, _, expr)
+    & LetStmtNode(head, _, _, expr)
     =>
     VarTypeInExpr(var, expr)
     ~>
