@@ -40,4 +40,3 @@ function id3(u) {
 }
 
 id2(5);
-id2('xyz');
