@@ -200,8 +200,8 @@ Axiom
 // statement.
 Axiom
     ConsStmtNodeList(head, tail)!
-    & FunctionStmtNode(head, _)
-    & Function(_, var, _, _ ,_)
+    & FunctionStmtNode(head, func)
+    & Function(func, var, _, _ ,_)
     =>
     VarTypeInStmts(var, tail)!
     ;
