@@ -42,7 +42,7 @@ Pred FunctionExprNode : ExprNode * FunctionNode;
 
 Pred ExprStmtNode : StmtNode * ExprNode;
 // LetStmtNode(node, var, initial_value)
-Pred LetStmtNode : StmtNode * Var * ExprNode;
+Pred LetStmtNode : StmtNode * Var * TypeNodeOpt * ExprNode;
 // ReturnStmtNode(node, return_value)
 Pred ReturnStmtNode : StmtNode * ExprNode;
 Pred ReturnVoidStmtNode : StmtNode;
@@ -318,7 +318,7 @@ Axiom
     ExprTypeContext(expr) ~> StmtTypeContext(stmt)
     ;
 Axiom
-    LetStmtNode(stmt, _, expr)
+    LetStmtNode(stmt, _, _, expr)
     =>
     ExprTypeContext(expr) ~> StmtTypeContext(stmt)
     ;
@@ -452,11 +452,12 @@ Func FunctionNodeType : FunctionNode -> Type;
 // Every let statements introduces a variable.
 Axiom
     ConsStmtNodeList(head, tail)!
-    & LetStmtNode(head, var, expr)
+    & LetStmtNode(head, var, tno, expr)
+    & expr_type = ExprType(expr)
+    & mono_expr_type = MonoType(expr_type)
     =>
-    VarTypeInStmts(var, tail)
-    ~>
-    MonoType(ExprType(expr))
+    expr_type = SemanticTypeOpt(tno)
+    & VarTypeInStmts(var, tail) = mono_expr_type
     ;
 
 // Every function statement introduces a variable for statements occuring after the function
@@ -506,7 +507,7 @@ Axiom
 // For each base node case that introduces a variable, it is an error if the variable is already in
 // scope before the node.
 
-Axiom LetStmtNode(head, var, _) & VarTypeInStmts(var, ConsStmtNodeList(head, _))! => Absurd();
+Axiom LetStmtNode(head, var, _, _) & VarTypeInStmts(var, ConsStmtNodeList(head, _))! => Absurd();
 Axiom
     FunctionStmtNode(head, func)
     & Function(func, var, _, _ ,_)
@@ -615,7 +616,7 @@ Axiom
 // Propagate previously defined variables through let statements into initializer expressions.
 Axiom
     stmts = ConsStmtNodeList(head, _)
-    & LetStmtNode(head, _, expr)
+    & LetStmtNode(head, _, _, expr)
     =>
     VarTypeInExpr(var, expr)
     ~>
@@ -756,7 +757,7 @@ Axiom
     CanProceedStmts(stmts);
 
 Axiom ExprStmtNode(stmt, _) => CanProceedStmt(stmt);
-Axiom LetStmtNode(stmt, _, _) => CanProceedStmt(stmt);
+Axiom LetStmtNode(stmt, _, _, _) => CanProceedStmt(stmt);
 // ReturnStmtNode does not proceed.
 // ReturnVoidStmtNode does not proceed.
 Axiom FunctionStmtNode(stmt, _) => CanProceedStmt(stmt);
