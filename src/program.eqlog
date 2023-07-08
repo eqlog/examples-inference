@@ -451,7 +451,7 @@ Axiom
     CanProceedStmts(stmts);
 
 Axiom ExprStmtNode(stmt, _) => CanProceedStmt(stmt);
-Axiom LetStmtNode(stmt, _, _) => CanProceedStmt(stmt);
+Axiom LetStmtNode(stmt, _, _, _) => CanProceedStmt(stmt);
 // ReturnStmtNode does not proceed.
 // ReturnVoidStmtNode does not proceed.
 Axiom FunctionStmtNode(stmt, _) => CanProceedStmt(stmt);
