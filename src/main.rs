@@ -4,6 +4,8 @@ eqlog_mod!(program);
 mod grammar_util;
 lalrpop_mod!(grammar);
 mod error;
+#[cfg(test)]
+mod grammar_test;
 
 use crate::error::LanguageError;
 use crate::grammar::ModuleParser;

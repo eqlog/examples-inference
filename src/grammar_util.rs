@@ -22,6 +22,7 @@ pub fn erase_comments(src: &str) -> String {
         .join("\n")
 }
 
+#[derive(Clone, Debug)]
 pub struct Literals {
     pub vars: HashMap<String, Var>,
     pub strings: HashMap<String, StringLiteral>,
