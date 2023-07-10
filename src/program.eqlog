@@ -1,4 +1,6 @@
 // # The AST, encoded algebraically/relationally.
+Sort ModuleNode;
+
 Sort TypeNode;
 Sort TypeNodeOpt;
 
@@ -15,6 +17,9 @@ Sort StringLiteral;
 Sort NumberLiteral;
 
 Sort ArgList;
+
+// Module(node, top_lvl_stmts)
+Pred Module : ModuleNode * StmtNodeList;
 
 Pred VoidTypeNode : TypeNode;
 Pred BooleanTypeNode : TypeNode;

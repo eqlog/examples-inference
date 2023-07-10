@@ -15,17 +15,17 @@ use std::env;
 use std::fs;
 use std::process::ExitCode;
 
-fn check_source(src: &str) -> Result<(Program, Literals, StmtNodeList), LanguageError> {
+fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageError> {
     let no_comments_src = erase_comments(src);
 
     let mut p = Program::new();
     let mut lits = Literals::new();
 
-    let stmts = ModuleParser::new()
+    let module = ModuleParser::new()
         .parse(&mut p, &mut lits, &no_comments_src)
         .map_err(|err| LanguageError::from_parse_error(err, &no_comments_src))?;
 
-    Ok((p, lits, stmts))
+    Ok((p, lits, module))
 }
 
 fn main() -> ExitCode {
