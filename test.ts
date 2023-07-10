@@ -23,6 +23,7 @@ function id_number(x) {
   }
 }
 
+// The identity function returns its argument.
 function id(y) {
   return y;
 }

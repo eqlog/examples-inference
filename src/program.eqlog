@@ -1,6 +1,8 @@
-Pred Absurd: ();
+Pred ConflictingTypes: ();
 
 // # The AST, encoded algebraically/relationally.
+Sort ModuleNode;
+
 Sort TypeNode;
 Sort TypeNodeOpt;
 
@@ -17,6 +19,9 @@ Sort StringLiteral;
 Sort NumberLiteral;
 
 Sort ArgList;
+
+// Module(node, top_lvl_stmts)
+Pred Module : ModuleNode * StmtNodeList;
 
 Pred VoidTypeNode : TypeNode;
 Pred BooleanTypeNode : TypeNode;
@@ -94,23 +99,23 @@ Axiom FunctionType(DomainTypes(tau), CodomainType(tau)) ~> tau;
 // type lists have the same length and are made up of the same Types.
 Func NilTypeList : TypeList;
 Func ConsTypeList : Type * TypeList -> TypeList;
-Axiom NilTypeList() = ConsTypeList(_, _) => Absurd();
+Axiom NilTypeList() = ConsTypeList(_, _) => ConflictingTypes();
 Axiom ConsTypeList(head_0, tail_0) = ConsTypeList(head_1, tail_1) => head_0 = head_1 & tail_0 = tail_1;
 
 // ## Joint injectivity of type operators.
-Axiom VoidType() = BooleanType() => Absurd();
-Axiom VoidType() = NumberType() => Absurd();
-Axiom VoidType() = StringType() => Absurd();
-Axiom VoidType() = FunctionType(_, _) => Absurd();
+Axiom VoidType() = BooleanType() => ConflictingTypes();
+Axiom VoidType() = NumberType() => ConflictingTypes();
+Axiom VoidType() = StringType() => ConflictingTypes();
+Axiom VoidType() = FunctionType(_, _) => ConflictingTypes();
 
-Axiom BooleanType() = NumberType() => Absurd();
-Axiom BooleanType() = StringType() => Absurd();
-Axiom BooleanType() = FunctionType(_, _) => Absurd();
+Axiom BooleanType() = NumberType() => ConflictingTypes();
+Axiom BooleanType() = StringType() => ConflictingTypes();
+Axiom BooleanType() = FunctionType(_, _) => ConflictingTypes();
 
-Axiom NumberType() = StringType() => Absurd();
-Axiom NumberType() = FunctionType(_, _) => Absurd();
+Axiom NumberType() = StringType() => ConflictingTypes();
+Axiom NumberType() = FunctionType(_, _) => ConflictingTypes();
 
-Axiom StringType() = FunctionType(_, _) => Absurd();
+Axiom StringType() = FunctionType(_, _) => ConflictingTypes();
 
 Axiom
     FunctionType(domain_0, codomain_0) = FunctionType(domain_1, codomain_1)

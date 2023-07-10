@@ -3,6 +3,10 @@ use crate::program::*;
 
 grammar(p: &mut Program, literals: &mut Literals);
 
+extern {
+    type Error = NeverType;
+}
+
 Var: Var = {
     <s: r"[A-Za-z][A-Za-z0-9_]*"> => {
         match literals.vars.get(s) {
@@ -210,8 +214,11 @@ Stmt: StmtNode = {
     },
 }
 
-pub Program: StmtNodeList = {
+pub Module: ModuleNode = {
     <stmts: Stmt*> => {
-        stmt_node_list(stmts.as_slice(), p)
+        let stmts = stmt_node_list(stmts.as_slice(), p);
+        let mn = p.new_module_node();
+        p.insert_module(mn, stmts);
+        mn
     }
 }
