@@ -162,3 +162,30 @@ Axiom
     ~>
     SemanticArgTypes(al)
     ;
+
+// ## Determining whether types are determined, i.e. do not contain unsolved type variables.
+
+Pred DeterminedType : Type;
+Pred DeterminedTypes : TypeList;
+
+// A type list is determined if all of the types it contains are determined.
+Axiom sigmas = NilTypeList() => DeterminedTypes(sigmas);
+Axiom
+    sigmas = ConsTypeList(head, tail)
+    & DeterminedType(head)
+    & DeterminedTypes(tail)
+    =>
+    DeterminedTypes(sigmas)
+    ;
+
+Axiom sigma = VoidType() => DeterminedType(sigma);
+Axiom sigma = BooleanType() => DeterminedType(sigma);
+Axiom sigma = NumberType() => DeterminedType(sigma);
+Axiom sigma = StringType() => DeterminedType(sigma);
+Axiom
+    sigma = FunctionType(dom, cod)
+    & DeterminedTypes(dom)
+    & DeterminedType(cod)
+    =>
+    DeterminedType(sigma)
+    ;

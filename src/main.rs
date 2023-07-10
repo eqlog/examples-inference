@@ -31,6 +31,10 @@ fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageEr
         return Err(LanguageError::ConflictingTypes);
     }
 
+    if p.iter_type().any(|sigma| !p.determined_type(sigma)) {
+        return Err(LanguageError::UndeterminedType);
+    }
+
     Ok((p, lits, module))
 }
 

@@ -10,6 +10,7 @@ pub enum LanguageError {
         column: usize,
     },
     ConflictingTypes,
+    UndeterminedType,
 }
 
 impl LanguageError {
@@ -54,6 +55,9 @@ impl fmt::Display for LanguageError {
             }
             ConflictingTypes => {
                 write!(f, "Conflicting types")?;
+            }
+            UndeterminedType => {
+                write!(f, "Undetermined type")?;
             }
         }
 
