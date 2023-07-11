@@ -5,11 +5,12 @@ use crate::grammar_util::NeverType;
 #[derive(Debug, Clone)]
 pub enum LanguageError {
     /// Line and column (both 0-based) of a parse error.
-    ParseError {
-        line: usize,
-        column: usize,
-    },
+    ParseError { line: usize, column: usize },
+    /// Some typing constraints conflict. E.g. a variable must both have type `string` and type
+    /// `number`.
     ConflictingTypes,
+    /// The type of an expression is not determined, for example because an unused function
+    /// argument does not have an explicit type annotation.
     UndeterminedType,
 }
 
@@ -54,7 +55,7 @@ impl fmt::Display for LanguageError {
                 write!(f, "Syntax error at {line_number}:{column_number}")?;
             }
             ConflictingTypes => {
-                write!(f, "Conflicting types")?;
+                write!(f, "Conflicting type constraints")?;
             }
             UndeterminedType => {
                 write!(f, "Undetermined type")?;
