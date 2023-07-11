@@ -74,7 +74,7 @@ fn bad_duplicate_function_name_arg() {
 #[test]
 fn bad_duplicate_function_arg_arg() {
     let err = check_source(&indoc! {"
-        function asdf (k: number, k: string) {}
+        function asdf (k: number, k: number) {}
     "})
     .unwrap_err();
     assert_eq!(&err.to_string(), "Variable declared more than once");
