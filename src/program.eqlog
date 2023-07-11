@@ -1,6 +1,9 @@
-Pred Absurd: ();
+Pred ConflictingTypes: ();
+Pred ConflictingVariables: ();
 
 // # The AST, encoded algebraically/relationally.
+Sort ModuleNode;
+
 Sort TypeNode;
 Sort TypeNodeOpt;
 
@@ -17,6 +20,9 @@ Sort StringLiteral;
 Sort NumberLiteral;
 
 Sort ArgList;
+
+// Module(node, top_lvl_stmts)
+Pred Module : ModuleNode * StmtNodeList;
 
 Pred VoidTypeNode : TypeNode;
 Pred BooleanTypeNode : TypeNode;
@@ -94,23 +100,23 @@ Axiom FunctionType(DomainTypes(tau), CodomainType(tau)) ~> tau;
 // type lists have the same length and are made up of the same Types.
 Func NilTypeList : TypeList;
 Func ConsTypeList : Type * TypeList -> TypeList;
-Axiom NilTypeList() = ConsTypeList(_, _) => Absurd();
+Axiom NilTypeList() = ConsTypeList(_, _) => ConflictingTypes();
 Axiom ConsTypeList(head_0, tail_0) = ConsTypeList(head_1, tail_1) => head_0 = head_1 & tail_0 = tail_1;
 
 // ## Joint injectivity of type operators.
-Axiom VoidType() = BooleanType() => Absurd();
-Axiom VoidType() = NumberType() => Absurd();
-Axiom VoidType() = StringType() => Absurd();
-Axiom VoidType() = FunctionType(_, _) => Absurd();
+Axiom VoidType() = BooleanType() => ConflictingTypes();
+Axiom VoidType() = NumberType() => ConflictingTypes();
+Axiom VoidType() = StringType() => ConflictingTypes();
+Axiom VoidType() = FunctionType(_, _) => ConflictingTypes();
 
-Axiom BooleanType() = NumberType() => Absurd();
-Axiom BooleanType() = StringType() => Absurd();
-Axiom BooleanType() = FunctionType(_, _) => Absurd();
+Axiom BooleanType() = NumberType() => ConflictingTypes();
+Axiom BooleanType() = StringType() => ConflictingTypes();
+Axiom BooleanType() = FunctionType(_, _) => ConflictingTypes();
 
-Axiom NumberType() = StringType() => Absurd();
-Axiom NumberType() = FunctionType(_, _) => Absurd();
+Axiom NumberType() = StringType() => ConflictingTypes();
+Axiom NumberType() = FunctionType(_, _) => ConflictingTypes();
 
-Axiom StringType() = FunctionType(_, _) => Absurd();
+Axiom StringType() = FunctionType(_, _) => ConflictingTypes();
 
 Axiom
     FunctionType(domain_0, codomain_0) = FunctionType(domain_1, codomain_1)
@@ -158,6 +164,32 @@ Axiom
     SemanticArgTypes(al)
     ;
 
+// ## Determining whether types are determined, i.e. do not contain unsolved type variables.
+
+Pred DeterminedType : Type;
+Pred DeterminedTypes : TypeList;
+
+// A type list is determined if all of the types it contains are determined.
+Axiom sigmas = NilTypeList() => DeterminedTypes(sigmas);
+Axiom
+    sigmas = ConsTypeList(head, tail)
+    & DeterminedType(head)
+    & DeterminedTypes(tail)
+    =>
+    DeterminedTypes(sigmas)
+    ;
+
+Axiom sigma = VoidType() => DeterminedType(sigma);
+Axiom sigma = BooleanType() => DeterminedType(sigma);
+Axiom sigma = NumberType() => DeterminedType(sigma);
+Axiom sigma = StringType() => DeterminedType(sigma);
+Axiom
+    sigma = FunctionType(dom, cod)
+    & DeterminedTypes(dom)
+    & DeterminedType(cod)
+    =>
+    DeterminedType(sigma)
+    ;
 
 // # Variable resolution.
 //
@@ -228,16 +260,16 @@ Axiom
 // For each base node case that introduces a variable, it is an error if the variable is already in
 // scope before the node.
 
-Axiom LetStmtNode(head, var, _, _) & VarTypeInStmts(var, ConsStmtNodeList(head, _))! => Absurd();
+Axiom LetStmtNode(head, var, _, _) & VarTypeInStmts(var, ConsStmtNodeList(head, _))! => ConflictingVariables();
 Axiom
     FunctionStmtNode(head, func)
     & Function(func, var, _, _ ,_)
     & VarTypeInStmts(var, ConsStmtNodeList(head, _))!
     =>
-    Absurd()
+    ConflictingVariables()
     ;
-Axiom Function(func, var, _, _, _) & VarTypeInFunction(var, func)! => Absurd();
-Axiom VarTypeInArgList(var, ConsArgList(var, _, _))! => Absurd();
+Axiom Function(func, var, _, _, _) & VarTypeInFunction(var, func)! => ConflictingVariables();
+Axiom VarTypeInArgList(var, ConsArgList(var, _, _))! => ConflictingVariables();
 
 // ## Propagation of variables through lists
 //
