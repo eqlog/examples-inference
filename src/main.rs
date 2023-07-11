@@ -3,6 +3,8 @@ use lalrpop_util::lalrpop_mod;
 eqlog_mod!(program);
 mod grammar_util;
 lalrpop_mod!(grammar);
+#[cfg(test)]
+mod binding_test;
 mod error;
 #[cfg(test)]
 mod grammar_test;
@@ -31,9 +33,12 @@ fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageEr
         return Err(LanguageError::ConflictingTypes);
     }
 
-    if p.iter_type().any(|sigma| !p.determined_type(sigma)) {
-        return Err(LanguageError::UndeterminedType);
-    }
+    // TODO: At the moment, almost all `Type` elements are undetermined because we haven't encoded
+    // the typing rules yet. We'll enable this check after adding those rules.
+    //
+    // if p.iter_type().any(|sigma| !p.determined_type(sigma)) {
+    //     return Err(LanguageError::UndeterminedType);
+    // }
 
     if p.conflicting_variables() {
         return Err(LanguageError::ConflictingVariables);

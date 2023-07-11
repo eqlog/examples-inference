@@ -11,6 +11,8 @@ pub enum LanguageError {
     ConflictingTypes,
     /// The type of an expression is not determined, for example because an unused function
     /// argument does not have an explicit type annotation.
+    // TODO: Temporarily allowed to be unused until we enable checking for undetermined types.
+    #[allow(unused)]
     UndeterminedType,
     /// A variable is declared more than once for the same scope.
     ConflictingVariables,
