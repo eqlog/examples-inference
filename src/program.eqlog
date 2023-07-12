@@ -277,7 +277,12 @@ Axiom VarTypeInArgList(var, ConsArgList(var, _, _))! => ConflictingVariables();
 
 Axiom VarTypeInStmts(var, tail) ~> VarTypeInStmts(var, ConsStmtNodeList(_, tail));
 Axiom VarTypeInArgList(var, tail) ~> VarTypeInArgList(var, ConsArgList(_, _, tail));
-Axiom VarTypeInExprs(var, tail) ~> VarTypeInExprs(var, ConsExprNodeList(_, tail));
+Axiom
+	VarTypeInExprs(var, ConsExprNodeList(head, tail)) = sigma
+	=>
+	VarTypeInExpr(var, head) = sigma
+  & VarTypeInExprs(var, tail) = sigma
+  ;
 
 // ## Propagating variables through nodes
 //
