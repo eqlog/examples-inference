@@ -13,6 +13,20 @@ fn bad_undeclared_variable() {
 }
 
 #[test]
+fn bad_undeclared_variable_in_app() {
+    let err = check_source(&indoc! {"
+        function asdf (x: number, y: number) {
+          return y;
+        }
+
+        let x = 5;
+        asdf(x, y);
+    "})
+    .unwrap_err();
+    assert_eq!(&err.to_string(), "Usage of undeclared variable");
+}
+
+#[test]
 fn bad_duplicate_let_let() {
     let err = check_source(&indoc! {"
         let k = 5;
