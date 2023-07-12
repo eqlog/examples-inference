@@ -7,6 +7,8 @@ lalrpop_mod!(grammar);
 mod binding_test;
 mod error;
 #[cfg(test)]
+mod expr_type_test;
+#[cfg(test)]
 mod grammar_test;
 
 use crate::error::LanguageError;
