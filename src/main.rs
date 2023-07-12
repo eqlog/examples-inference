@@ -33,17 +33,6 @@ fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageEr
         return Err(LanguageError::ConflictingVariables);
     }
 
-    if p.conflicting_types() {
-        return Err(LanguageError::ConflictingTypes);
-    }
-
-    // TODO: At the moment, almost all `Type` elements are undetermined because we haven't encoded
-    // the typing rules yet. We'll enable this check after adding those rules.
-    //
-    // if p.iter_type().any(|sigma| !p.determined_type(sigma)) {
-    //     return Err(LanguageError::UndeterminedType);
-    // }
-
     for (expr, var) in p.iter_variable_expr_node() {
         if p.iter_var_type_in_expr()
             .find(|(var0, expr0, _)| {
@@ -54,6 +43,17 @@ fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageEr
             return Err(LanguageError::UndeclaredVariable);
         }
     }
+
+    if p.conflicting_types() {
+        return Err(LanguageError::ConflictingTypes);
+    }
+
+    // TODO: At the moment, almost all `Type` elements are undetermined because we haven't encoded
+    // the typing rules yet. We'll enable this check after adding those rules.
+    //
+    // if p.iter_type().any(|sigma| !p.determined_type(sigma)) {
+    //     return Err(LanguageError::UndeterminedType);
+    // }
 
     Ok((p, lits, module))
 }
