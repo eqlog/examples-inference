@@ -3,13 +3,62 @@ use lalrpop_util::lalrpop_mod;
 eqlog_mod!(program);
 mod grammar_util;
 lalrpop_mod!(grammar);
+#[cfg(test)]
+mod binding_test;
+mod error;
+#[cfg(test)]
+mod expr_type_test;
+#[cfg(test)]
+mod grammar_test;
 
-use crate::grammar::ProgramParser;
-use crate::grammar_util::Literals;
+use crate::error::LanguageError;
+use crate::grammar::ModuleParser;
+use crate::grammar_util::{erase_comments, Literals};
 use crate::program::*;
 use std::env;
 use std::fs;
 use std::process::ExitCode;
+
+fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageError> {
+    let no_comments_src = erase_comments(src);
+
+    let mut p = Program::new();
+    let mut lits = Literals::new();
+
+    let module = ModuleParser::new()
+        .parse(&mut p, &mut lits, &no_comments_src)
+        .map_err(|err| LanguageError::from_parse_error(err, &no_comments_src))?;
+
+    p.close();
+
+    if p.conflicting_types() {
+        return Err(LanguageError::ConflictingTypes);
+    }
+
+    // TODO: At the moment, almost all `Type` elements are undetermined because we haven't encoded
+    // the typing rules yet. We'll enable this check after adding those rules.
+    //
+    // if p.iter_type().any(|sigma| !p.determined_type(sigma)) {
+    //     return Err(LanguageError::UndeterminedType);
+    // }
+
+    if p.conflicting_variables() {
+        return Err(LanguageError::ConflictingVariables);
+    }
+
+    for (expr, var) in p.iter_variable_expr_node() {
+        if p.iter_var_type_in_expr()
+            .find(|(var0, expr0, _)| {
+                p.are_equal_expr_node(*expr0, expr) && p.are_equal_var(*var0, var)
+            })
+            .is_none()
+        {
+            return Err(LanguageError::UndeclaredVariable);
+        }
+    }
+
+    Ok((p, lits, module))
+}
 
 fn main() -> ExitCode {
     let mut args = env::args();
@@ -25,7 +74,7 @@ fn main() -> ExitCode {
         }
     };
 
-    let contents: String = match fs::read_to_string(&file_name) {
+    let src: String = match fs::read_to_string(&file_name) {
         Ok(contents) => contents,
         Err(err) => {
             eprintln!("Error reading file {file_name}: {err}");
@@ -33,33 +82,13 @@ fn main() -> ExitCode {
         }
     };
 
-    let mut p = Program::new();
-    let mut literals = Literals::new();
-
-    match ProgramParser::new().parse(&mut p, &mut literals, &contents) {
-        Ok(stmts) => stmts,
+    match check_source(&src) {
+        Ok(_) => {}
         Err(err) => {
-            eprintln!("Syntax error: {err}");
+            eprintln!("{}", err);
             return ExitCode::FAILURE;
         }
     };
-
-    p.close();
-
-    if p.absurd() {
-        eprintln!("Type checking error");
-        return ExitCode::FAILURE;
-    }
-
-    for (_, var) in p.iter_variable_expr_node() {
-        if p.iter_var_type_in_expr()
-            .find(|(var0, _, _)| *var0 == var)
-            .is_none()
-        {
-            eprintln!("Usage of Undeclared variable");
-            return ExitCode::FAILURE;
-        }
-    }
 
     ExitCode::SUCCESS
 }

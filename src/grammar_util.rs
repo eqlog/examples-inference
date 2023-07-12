@@ -1,7 +1,28 @@
 use crate::program::*;
 
+use itertools::Itertools;
 use std::collections::HashMap;
 
+// TODO: Use rust's built-in never type ! once it is stabilized.
+pub enum NeverType {}
+
+/// Erases all line comments (i.e., those starting with `//`).
+///
+/// Since we're only deleting suffixes of lines, positions given by a (line, column) pair into the
+/// source with comments erased are also valid for the original source.
+pub fn erase_comments(src: &str) -> String {
+    src.lines()
+        .map(|line| {
+            let comment_begin: Option<usize> = line.find("//");
+            match comment_begin {
+                Some(comment_begin) => &line[..comment_begin],
+                None => line,
+            }
+        })
+        .join("\n")
+}
+
+#[derive(Clone, Debug)]
 pub struct Literals {
     pub vars: HashMap<String, Var>,
     pub strings: HashMap<String, StringLiteral>,
