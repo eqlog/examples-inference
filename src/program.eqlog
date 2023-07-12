@@ -350,10 +350,10 @@ Axiom
 Axiom
     stmts = ConsStmtNodeList(head, _)
     & WhileStmtNode(head, cond, body)
-		& sigma = VarTypeInStmts(var, stmts)
+    & sigma = VarTypeInStmts(var, stmts)
     =>
     VarTypeInStmts(var, body) = sigma
-	  & VarTypeInExpr(var, cond) = sigma
+    & VarTypeInExpr(var, cond) = sigma
     ;
 
 // Propagate variables through expression statements.
