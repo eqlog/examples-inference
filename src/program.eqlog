@@ -349,11 +349,11 @@ Axiom
 // Propagate variables through while statements.
 Axiom
     stmts = ConsStmtNodeList(head, _)
-    & WhileStmtNode(head, _, body)
+    & WhileStmtNode(head, cond, body)
+		& sigma = VarTypeInStmts(var, stmts)
     =>
-    VarTypeInStmts(var, body)
-    ~>
-    VarTypeInStmts(var, stmts)
+    VarTypeInStmts(var, body) = sigma
+	  & VarTypeInExpr(var, cond) = sigma
     ;
 
 // Propagate variables through expression statements.
