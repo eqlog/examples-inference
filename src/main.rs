@@ -29,6 +29,10 @@ fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageEr
 
     p.close();
 
+    if p.conflicting_variables() {
+        return Err(LanguageError::ConflictingVariables);
+    }
+
     if p.conflicting_types() {
         return Err(LanguageError::ConflictingTypes);
     }
@@ -39,10 +43,6 @@ fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageEr
     // if p.iter_type().any(|sigma| !p.determined_type(sigma)) {
     //     return Err(LanguageError::UndeterminedType);
     // }
-
-    if p.conflicting_variables() {
-        return Err(LanguageError::ConflictingVariables);
-    }
 
     for (expr, var) in p.iter_variable_expr_node() {
         if p.iter_var_type_in_expr()
