@@ -471,8 +471,18 @@ Axiom FunctionExprNode(expr, func) => FunctionNodeType(func) ~> ExprType(expr);
 //
 // To detect whether a function has an implicit `return ();` in the end, we need to decide whether
 // the execution flow can reach the end of the function. Obviously this is undecidable in the
-// general case; our type system will thus consider this possible if there is a control flow path
-// through the function that does not traverse a return statement.
+// general case. Our type system will thus consider all possible paths through branches of function
+// body possible independently of which values expressions can assume. For example, in the function
+// 
+//   function foo () {
+//     if (true) {
+//       ...
+//     } else {
+//       ...
+//     }
+//   }
+//
+// we will consider the `else` branch potentially reachable.
 
 // CanProceedStmt(stmt) is true if execution can flow past this statement. CanProceedStmts(stmts)
 // is true if CanProceed holds for all statements in stmts.
@@ -497,8 +507,9 @@ Axiom IfStmtNode(stmt, _, true_branch, _) & CanProceedStmts(true_branch) => CanP
 Axiom IfStmtNode(stmt, _, _, false_branch) & CanProceedStmts(false_branch) => CanProceedStmt(stmt);
 Axiom WhileStmtNode(stmt, _, _) => CanProceedStmt(stmt);
 
-// ## Explicit teturn type analysis
-// Here we analyze which types the expression in explicitly return statements among a list of
+// ## Explicit return type analysis
+//
+// Here we analyze which types the expression in explicit return statements among a list of
 // statements have. The list of statements need not be the full body of a function, so we only care
 // about explicit returns, not the possible implicit `return ();` at the end of a function.
 // However, every list of statements can at most return expressions of a single type, so we can
@@ -537,7 +548,7 @@ Axiom
     ReturnsType(stmts) ~> ReturnsType(false_branch)
     ;
 
-// An while statement can return a type if its body can return that type.
+// A while statement can return a type if its body can return that type.
 Axiom
     stmts = ConsStmtNodeList(head, _)
     & WhileStmtNode(head, _, body)
@@ -562,7 +573,7 @@ Axiom
 // Typing constraints due to the types of function variables. Note that the types of argument
 // variables as given by VarInArgList were previously unified with the optional type annotation (an
 // opaque Type element if no annotation was given), which in turn were unified with the types
-// appearing SemanticArgTypes.
+// appearing in SemanticArgTypes.
 Axiom
     Function(func, _, args, _, _)
     =>
