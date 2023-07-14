@@ -154,3 +154,60 @@ fn app_func_to_dom_cod() {
     assert!(var_has_type("c", number_type, &p, &lits));
     assert!(var_has_type("e", boolean_type, &p, &lits));
 }
+
+#[test]
+fn bad_undetermined_arg_type() {
+    let err = check_source(&indoc! {"
+        function asdf (a) {}
+    "})
+    .unwrap_err();
+    assert_eq!(&err.to_string(), "Undetermined type");
+}
+
+#[test]
+fn determined_arg_type_by_call_site() {
+    let (p, lits, _) = check_source(&indoc! {"
+        function asdf (a) {}
+        asdf(5);
+    "})
+    .unwrap();
+    let number_type = p.number_type().unwrap();
+    assert!(var_has_type("a", number_type, &p, &lits));
+}
+
+#[test]
+fn bad_undetermined_return_type() {
+    let err = check_source(&indoc! {"
+        function asdf () {
+          return asdf();
+        }
+    "})
+    .unwrap_err();
+    assert_eq!(&err.to_string(), "Undetermined type");
+}
+
+#[test]
+fn determined_return_type_by_call_site() {
+    let (p, lits, _) = check_source(&indoc! {"
+        function asdf () {
+          return asdf();
+        }
+        let x: number = asdf();
+    "})
+    .unwrap();
+    let number_type = p.number_type().unwrap();
+    assert!(var_has_type("x", number_type, &p, &lits));
+}
+
+#[test]
+fn determined_return_type_by_call_site() {
+    let (p, lits, _) = check_source(&indoc! {"
+        function asdf () {
+          return asdf();
+        }
+        let x: number = asdf();
+    "})
+    .unwrap();
+    let number_type = p.number_type().unwrap();
+    assert!(var_has_type("x", number_type, &p, &lits));
+}
