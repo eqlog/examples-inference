@@ -200,14 +200,30 @@ fn determined_return_type_by_call_site() {
 }
 
 #[test]
-fn determined_return_type_by_call_site() {
-    let (p, lits, _) = check_source(&indoc! {"
-        function asdf () {
-          return asdf();
+fn bad_conflicting_return_types() {
+    let err = check_source(&indoc! {"
+        function asdf (cond) {
+          if (cond) {
+            return 'asdf';
+          } else {
+            return 5;
+          }
         }
-        let x: number = asdf();
     "})
-    .unwrap();
-    let number_type = p.number_type().unwrap();
-    assert!(var_has_type("x", number_type, &p, &lits));
+    .unwrap_err();
+    assert_eq!(&err.to_string(), "Conflicting type constraints");
+}
+
+#[test]
+fn bad_conflicting_return_types_implicit() {
+    let err = check_source(&indoc! {"
+        function asdf (cond) {
+          if (cond) {
+            return 'asdf';
+          } else {
+          }
+        }
+    "})
+    .unwrap_err();
+    assert_eq!(&err.to_string(), "Conflicting type constraints");
 }
