@@ -448,6 +448,31 @@ Axiom
     =>
     DeterminedType(sigma)
     ;
+Axiom
+    sigmas = DomainTypes(kappa)
+    & DeterminedType(kappa)
+    =>
+    DeterminedTypes(sigmas)
+    ;
+Axiom
+    tau = CodomainType(kappa)
+    & DeterminedType(kappa)
+    =>
+    DeterminedType(tau)
+    ;
+
+Axiom
+    ConsArgList(_, tno, _)!
+    & t = SemanticTypeOpt(tno)
+    =>
+    DeterminedType(t)
+    ;
+Axiom
+    Function(_, _, _, codomain_tno, _)
+    & t = SemanticTypeOpt(codomain_tno)
+    =>
+    DeterminedType(t)
+    ;
 
 // # Variable resolution.
 //

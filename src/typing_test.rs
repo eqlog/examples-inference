@@ -6,8 +6,9 @@ use indoc::indoc;
 
 fn var_has_type(var: &str, ty: Type, p: &Program, lits: &Literals) -> bool {
     let var: Var = *lits.vars.get(var).expect("variable should be in literals");
+    let ty = p.mono_type(ty).unwrap();
     p.iter_var_type_in_stmts()
-        .any(|(var0, _, ty0)| p.are_equal_var(var0, var) && p.are_equal_type(ty, ty0))
+        .any(|(var0, _, ty0)| p.are_equal_var(var0, var) && p.are_equal_generic_type(ty, ty0))
 }
 
 #[test]
@@ -153,37 +154,6 @@ fn app_func_to_dom_cod() {
     assert!(var_has_type("b", string_type, &p, &lits));
     assert!(var_has_type("c", number_type, &p, &lits));
     assert!(var_has_type("e", boolean_type, &p, &lits));
-}
-
-#[test]
-fn bad_undetermined_arg_type() {
-    let err = check_source(&indoc! {"
-        function asdf (a) {}
-    "})
-    .unwrap_err();
-    assert_eq!(&err.to_string(), "Undetermined type");
-}
-
-#[test]
-fn determined_arg_type_by_call_site() {
-    let (p, lits, _) = check_source(&indoc! {"
-        function asdf (a) {}
-        asdf(5);
-    "})
-    .unwrap();
-    let number_type = p.number_type().unwrap();
-    assert!(var_has_type("a", number_type, &p, &lits));
-}
-
-#[test]
-fn bad_undetermined_return_type() {
-    let err = check_source(&indoc! {"
-        function asdf () {
-          return asdf();
-        }
-    "})
-    .unwrap_err();
-    assert_eq!(&err.to_string(), "Undetermined type");
 }
 
 #[test]
