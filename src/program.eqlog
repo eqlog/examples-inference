@@ -166,6 +166,58 @@ Axiom
     SemanticArgTypes(al)
     ;
 
+// ## Determining whether types are determined, i.e. do not contain unsolved type variables.
+
+Pred DeterminedType : Type;
+Pred DeterminedTypes : TypeList;
+
+// A type list is determined if all of the types it contains are determined.
+Axiom sigmas = NilTypeList() => DeterminedTypes(sigmas);
+Axiom
+    sigmas = ConsTypeList(head, tail)
+    & DeterminedType(head)
+    & DeterminedTypes(tail)
+    =>
+    DeterminedTypes(sigmas)
+    ;
+
+Axiom sigma = VoidType() => DeterminedType(sigma);
+Axiom sigma = BooleanType() => DeterminedType(sigma);
+Axiom sigma = NumberType() => DeterminedType(sigma);
+Axiom sigma = StringType() => DeterminedType(sigma);
+Axiom
+    sigma = FunctionType(dom, cod)
+    & DeterminedTypes(dom)
+    & DeterminedType(cod)
+    =>
+    DeterminedType(sigma)
+    ;
+Axiom
+    sigmas = DomainTypes(kappa)
+    & DeterminedType(kappa)
+    =>
+    DeterminedTypes(sigmas)
+    ;
+Axiom
+    tau = CodomainType(kappa)
+    & DeterminedType(kappa)
+    =>
+    DeterminedType(tau)
+    ;
+
+Axiom
+    ConsArgList(_, tno, _)!
+    & t = SemanticTypeOpt(tno)
+    =>
+    DeterminedType(t)
+    ;
+Axiom
+    Function(_, _, _, codomain_tno, _)
+    & t = SemanticTypeOpt(codomain_tno)
+    =>
+    DeterminedType(t)
+    ;
+
 // # Type contexts.
 Sort TypeContext;
 
@@ -256,7 +308,6 @@ Func ExprType : ExprNode -> Type;
 Sort GeneralType;
 Func VarTypeInArgList : Var * ArgList -> GeneralType;
 Func MonoType : Type -> GeneralType;
-Axiom sigma : Type => MonoType(sigma)!;
 
 // The type of an expression is in the type context of that expression.
 Axiom
@@ -422,57 +473,6 @@ Axiom
     Substitute(subst, FunctionType(dom, cod))
     ;
 
-// ## Determining whether types are determined, i.e. do not contain unsolved type variables.
-
-Pred DeterminedType : Type;
-Pred DeterminedTypes : TypeList;
-
-// A type list is determined if all of the types it contains are determined.
-Axiom sigmas = NilTypeList() => DeterminedTypes(sigmas);
-Axiom
-    sigmas = ConsTypeList(head, tail)
-    & DeterminedType(head)
-    & DeterminedTypes(tail)
-    =>
-    DeterminedTypes(sigmas)
-    ;
-
-Axiom sigma = VoidType() => DeterminedType(sigma);
-Axiom sigma = BooleanType() => DeterminedType(sigma);
-Axiom sigma = NumberType() => DeterminedType(sigma);
-Axiom sigma = StringType() => DeterminedType(sigma);
-Axiom
-    sigma = FunctionType(dom, cod)
-    & DeterminedTypes(dom)
-    & DeterminedType(cod)
-    =>
-    DeterminedType(sigma)
-    ;
-Axiom
-    sigmas = DomainTypes(kappa)
-    & DeterminedType(kappa)
-    =>
-    DeterminedTypes(sigmas)
-    ;
-Axiom
-    tau = CodomainType(kappa)
-    & DeterminedType(kappa)
-    =>
-    DeterminedType(tau)
-    ;
-
-Axiom
-    ConsArgList(_, tno, _)!
-    & t = SemanticTypeOpt(tno)
-    =>
-    DeterminedType(t)
-    ;
-Axiom
-    Function(_, _, _, codomain_tno, _)
-    & t = SemanticTypeOpt(codomain_tno)
-    =>
-    DeterminedType(t)
-    ;
 
 // # Variable resolution.
 //
@@ -490,10 +490,16 @@ Axiom
 // all of those variables are in scope at the NilStmtNodeList of body. Similarly, if args is the
 // ArgList of a function definition, then the variables listed in args are only in scope for the
 // NilArgList at the root of args.
+
 Func PolyType : TypeContext * Type -> GeneralType;
+// Declared earlier:
+// Func MonoType : Type -> GeneralType;
+Axiom sigma : Type => MonoType(sigma)!;
 
 Func VarTypeInStmts : Var * StmtNodeList -> GeneralType;
 Func VarTypeInFunction : Var * FunctionNode -> GeneralType;
+// Declared earlier:
+// Func VarTypeInArgList : Var * ArgList -> GeneralType;
 Func VarTypeInExpr : Var * ExprNode -> GeneralType;
 Func VarTypeInExprs : Var * ExprNodeList -> GeneralType;
 
@@ -541,8 +547,6 @@ Axiom
     =>
     VarTypeInArgList(var, arg)
     ~>
-    // TODO: Should this be a PolyType? This would allow recursion with type args different from
-    // the original call.
     MonoType(FunctionNodeType(func))
     ;
 
@@ -716,6 +720,8 @@ Axiom
 // Func ExprType : ExprNode -> Type;
 Func ExprTypes : ExprNodeList -> TypeList;
 
+// The substitutions associated to expressions with PolyTypes that must be instantiated into
+// MonoTypes.
 Func ExprSubstitution : ExprNode -> Substitution;
 
 // Both ExprType and ExprTypes are total. Our axioms enforce that ExprTypes is given by mapping
