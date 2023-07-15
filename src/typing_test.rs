@@ -8,7 +8,7 @@ fn var_has_type(var: &str, ty: Type, p: &Program, lits: &Literals) -> bool {
     let var: Var = *lits.vars.get(var).expect("variable should be in literals");
     let ty = p.mono_type(ty).unwrap();
     p.iter_var_type_in_stmts()
-        .any(|(var0, _, ty0)| p.are_equal_var(var0, var) && p.are_equal_generic_type(ty, ty0))
+        .any(|(var0, _, ty0)| p.are_equal_var(var0, var) && p.are_equal_general_type(ty, ty0))
 }
 
 #[test]

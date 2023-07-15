@@ -253,9 +253,9 @@ Axiom exprs : ExprNodeList => ExprsTypeContext(exprs)!;
 
 // Forward declarations.
 Func ExprType : ExprNode -> Type;
-Sort GenericType;
-Func VarTypeInArgList : Var * ArgList -> GenericType;
-Func MonoType : Type -> GenericType;
+Sort GeneralType;
+Func VarTypeInArgList : Var * ArgList -> GeneralType;
+Func MonoType : Type -> GeneralType;
 Axiom sigma : Type => MonoType(sigma)!;
 
 // The type of an expression is in the type context of that expression.
@@ -490,12 +490,12 @@ Axiom
 // all of those variables are in scope at the NilStmtNodeList of body. Similarly, if args is the
 // ArgList of a function definition, then the variables listed in args are only in scope for the
 // NilArgList at the root of args.
-Func PolyType : TypeContext * Type -> GenericType;
+Func PolyType : TypeContext * Type -> GeneralType;
 
-Func VarTypeInStmts : Var * StmtNodeList -> GenericType;
-Func VarTypeInFunction : Var * FunctionNode -> GenericType;
-Func VarTypeInExpr : Var * ExprNode -> GenericType;
-Func VarTypeInExprs : Var * ExprNodeList -> GenericType;
+Func VarTypeInStmts : Var * StmtNodeList -> GeneralType;
+Func VarTypeInFunction : Var * FunctionNode -> GeneralType;
+Func VarTypeInExpr : Var * ExprNode -> GeneralType;
+Func VarTypeInExprs : Var * ExprNodeList -> GeneralType;
 
 // Forward declarations of the function assigning semantic types to function literals.
 Func FunctionNodeType : FunctionNode -> Type;
@@ -835,6 +835,7 @@ Axiom IfStmtNode(stmt, _, _, false_branch) & CanProceedStmts(false_branch) => Ca
 Axiom WhileStmtNode(stmt, _, _) => CanProceedStmt(stmt);
 
 // ## Explicit return type analysis
+//
 // Here we analyze which types the expression in explicit return statements among a list of
 // statements have. The list of statements need not be the full body of a function, so we only care
 // about explicit returns, not the possible implicit `return ();` at the end of a function.
