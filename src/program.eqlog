@@ -178,6 +178,19 @@ Axiom
 // Here the type of `x` is not determined. Applying the function at least once on an argument with
 // determined type will determine the argument type of `foo` though, for example if we add the
 // statement `foo(5);`
+//
+// With polymorphism the above example doesn't work, since `foo` will have type `forall a. a ->
+// unit`. However, unsolved type variables remain a problem because we require variables introduced
+// using `let` to have a mono/simple type. Consider the following example program:
+//
+//   function foo() {
+//     return foo();
+//   }
+//
+//   let x = foo();
+//
+// Here `foo`  has type `forall a. () -> a`. Thus, `x` must  be simple type, but it can be any
+// simple type: The type of `x` is not determined.
 
 Pred DeterminedType : Type;
 Pred DeterminedTypes : TypeList;
