@@ -3,6 +3,10 @@ use crate::program::*;
 
 grammar(p: &mut Program, literals: &mut Literals);
 
+extern {
+    type Error = NeverType;
+}
+
 Var: Var = {
     <s: r"[A-Za-z][A-Za-z0-9_]*"> => {
         match literals.vars.get(s) {

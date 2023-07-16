@@ -1,4 +1,5 @@
-Pred Absurd: ();
+Pred ConflictingTypes: ();
+Pred ConflictingVariables: ();
 
 // # The AST, encoded algebraically/relationally.
 Sort ModuleNode;
@@ -101,23 +102,23 @@ Axiom FunctionType(DomainTypes(tau), CodomainType(tau)) ~> tau;
 // type lists have the same length and are made up of the same Types.
 Func NilTypeList : TypeList;
 Func ConsTypeList : Type * TypeList -> TypeList;
-Axiom NilTypeList() = ConsTypeList(_, _) => Absurd();
+Axiom NilTypeList() = ConsTypeList(_, _) => ConflictingTypes();
 Axiom ConsTypeList(head_0, tail_0) = ConsTypeList(head_1, tail_1) => head_0 = head_1 & tail_0 = tail_1;
 
 // ## Joint injectivity of type operators.
-Axiom VoidType() = BooleanType() => Absurd();
-Axiom VoidType() = NumberType() => Absurd();
-Axiom VoidType() = StringType() => Absurd();
-Axiom VoidType() = FunctionType(_, _) => Absurd();
+Axiom VoidType() = BooleanType() => ConflictingTypes();
+Axiom VoidType() = NumberType() => ConflictingTypes();
+Axiom VoidType() = StringType() => ConflictingTypes();
+Axiom VoidType() = FunctionType(_, _) => ConflictingTypes();
 
-Axiom BooleanType() = NumberType() => Absurd();
-Axiom BooleanType() = StringType() => Absurd();
-Axiom BooleanType() = FunctionType(_, _) => Absurd();
+Axiom BooleanType() = NumberType() => ConflictingTypes();
+Axiom BooleanType() = StringType() => ConflictingTypes();
+Axiom BooleanType() = FunctionType(_, _) => ConflictingTypes();
 
-Axiom NumberType() = StringType() => Absurd();
-Axiom NumberType() = FunctionType(_, _) => Absurd();
+Axiom NumberType() = StringType() => ConflictingTypes();
+Axiom NumberType() = FunctionType(_, _) => ConflictingTypes();
 
-Axiom StringType() = FunctionType(_, _) => Absurd();
+Axiom StringType() = FunctionType(_, _) => ConflictingTypes();
 
 Axiom
     FunctionType(domain_0, codomain_0) = FunctionType(domain_1, codomain_1)
@@ -164,6 +165,121 @@ Axiom
     ~>
     SemanticArgTypes(al)
     ;
+
+// ## Determined types, i.e. those that do not contain unsolved type variables.
+//
+// In well-formed programs, every type should be determined.
+//
+// Without polymorphism, for example the following program contains an
+// undetermined type:
+//
+//   function foo(x) {}
+//
+// Here the type of `x` is not determined. Applying the function at least once on an argument with
+// determined type will determine the argument type of `foo` though, for example if we add the
+// statement `foo(5);`
+//
+// With polymorphism the above example doesn't work, since `foo` will have type `forall a. a ->
+// unit`. However, unsolved type variables remain a problem because we require variables introduced
+// using `let` to have a mono/simple type. Consider the following example program:
+//
+//   function foo() {
+//     return foo();
+//   }
+//
+//   let x = foo();
+//
+// Here `foo`  has type `forall a. () -> a`. Thus, `x` must  be simple type, but it can be any
+// simple type: The type of `x` is not determined.
+
+Pred DeterminedType : Type;
+Pred DeterminedTypes : TypeList;
+
+// A type list is determined if all of the types it contains are determined.
+Axiom sigmas = NilTypeList() => DeterminedTypes(sigmas);
+Axiom
+    sigmas = ConsTypeList(head, tail)
+    & DeterminedType(head)
+    & DeterminedTypes(tail)
+    =>
+    DeterminedTypes(sigmas)
+    ;
+
+Axiom sigma = VoidType() => DeterminedType(sigma);
+Axiom sigma = BooleanType() => DeterminedType(sigma);
+Axiom sigma = NumberType() => DeterminedType(sigma);
+Axiom sigma = StringType() => DeterminedType(sigma);
+Axiom
+    sigma = FunctionType(dom, cod)
+    & DeterminedTypes(dom)
+    & DeterminedType(cod)
+    =>
+    DeterminedType(sigma)
+    ;
+Axiom
+    sigmas = DomainTypes(kappa)
+    & DeterminedType(kappa)
+    =>
+    DeterminedTypes(sigmas)
+    ;
+Axiom
+    tau = CodomainType(kappa)
+    & DeterminedType(kappa)
+    =>
+    DeterminedType(tau)
+    ;
+
+Axiom
+    ConsArgList(_, tno, _)!
+    & t = SemanticTypeOpt(tno)
+    =>
+    DeterminedType(t)
+    ;
+Axiom
+    Function(_, _, _, codomain_tno, _)
+    & t = SemanticTypeOpt(codomain_tno)
+    =>
+    DeterminedType(t)
+    ;
+
+// ## Well-founded types
+//
+// Consider the following (invalid) function definition:
+//
+//   function foo (x) {
+//       x(x);
+//   }
+//
+// If a denotes the type of x, then a must be equal to the function type a => a, which is
+// unsatisfiable. To issue an error in cases such as this one, we introduce a binary predicate
+// SmallerType such that SmallerType(sigma, tau) holds if and only if sigma is structurally
+// strictly smaller than tau.  If we find that a type must be structurally smaller than itself,
+// then we generate an error.
+
+Pred SmallerType : Type * Type;
+Axiom SmallerType(sigma, tau) & SmallerType(tau, kappa) => SmallerType(sigma, kappa);
+
+Axiom SmallerType(sigma, sigma) => ConflictingTypes();
+
+// SmallerTypes(sigmas, tau) <=> forall sigma in sigma. SmallerType(sigma, tau)
+Pred SmallerTypes : TypeList * Type;
+Axiom sigmas = NilTypeList() & tau : Type => SmallerTypes(sigmas, tau);
+Axiom
+    SmallerTypes(ConsTypeList(head, tail), tau)
+    =>
+    SmallerType(head, tau)
+    & SmallerTypes(tail, tau)
+    ;
+Axiom
+    SmallerType(head, tau)
+    & SmallerTypes(tail, tau)
+    & sigmas = ConsTypeList(head, tail)
+    =>
+    SmallerTypes(sigmas, tau)
+    ;
+
+// All domain types and the codomain of a function type are smaller than the function type.
+Axiom kappa = FunctionType(sigmas, tau) => SmallerTypes(sigmas, kappa) & SmallerType(tau, kappa);
 
 // # Type contexts.
 Sort TypeContext;
@@ -252,10 +368,9 @@ Axiom exprs : ExprNodeList => ExprsTypeContext(exprs)!;
 
 // Forward declarations.
 Func ExprType : ExprNode -> Type;
-Sort GenericType;
-Func VarTypeInArgList : Var * ArgList -> GenericType;
-Func MonoType : Type -> GenericType;
-Axiom sigma : Type => MonoType(sigma)!;
+Sort GeneralType;
+Func VarTypeInArgList : Var * ArgList -> GeneralType;
+Func MonoType : Type -> GeneralType;
 
 // The type of an expression is in the type context of that expression.
 Axiom
@@ -421,6 +536,7 @@ Axiom
     Substitute(subst, FunctionType(dom, cod))
     ;
 
+
 // # Variable resolution.
 //
 // For each node kind X in which variables matter, we introduce a partial function
@@ -437,12 +553,18 @@ Axiom
 // all of those variables are in scope at the NilStmtNodeList of body. Similarly, if args is the
 // ArgList of a function definition, then the variables listed in args are only in scope for the
 // NilArgList at the root of args.
-Func PolyType : TypeContext * Type -> GenericType;
 
-Func VarTypeInStmts : Var * StmtNodeList -> GenericType;
-Func VarTypeInFunction : Var * FunctionNode -> GenericType;
-Func VarTypeInExpr : Var * ExprNode -> GenericType;
-Func VarTypeInExprs : Var * ExprNodeList -> GenericType;
+Func PolyType : TypeContext * Type -> GeneralType;
+// Declared earlier:
+// Func MonoType : Type -> GeneralType;
+Axiom sigma : Type => MonoType(sigma)!;
+
+Func VarTypeInStmts : Var * StmtNodeList -> GeneralType;
+Func VarTypeInFunction : Var * FunctionNode -> GeneralType;
+// Declared earlier:
+// Func VarTypeInArgList : Var * ArgList -> GeneralType;
+Func VarTypeInExpr : Var * ExprNode -> GeneralType;
+Func VarTypeInExprs : Var * ExprNodeList -> GeneralType;
 
 // Forward declarations of the function assigning semantic types to function literals.
 Func FunctionNodeType : FunctionNode -> Type;
@@ -488,8 +610,6 @@ Axiom
     =>
     VarTypeInArgList(var, arg)
     ~>
-    // TODO: Should this be a PolyType? This would allow recursion with type args different from
-    // the original call.
     MonoType(FunctionNodeType(func))
     ;
 
@@ -507,16 +627,16 @@ Axiom
 // For each base node case that introduces a variable, it is an error if the variable is already in
 // scope before the node.
 
-Axiom LetStmtNode(head, var, _, _) & VarTypeInStmts(var, ConsStmtNodeList(head, _))! => Absurd();
+Axiom LetStmtNode(head, var, _, _) & VarTypeInStmts(var, ConsStmtNodeList(head, _))! => ConflictingVariables();
 Axiom
     FunctionStmtNode(head, func)
     & Function(func, var, _, _ ,_)
     & VarTypeInStmts(var, ConsStmtNodeList(head, _))!
     =>
-    Absurd()
+    ConflictingVariables()
     ;
-Axiom Function(func, var, _, _, _) & VarTypeInFunction(var, func)! => Absurd();
-Axiom VarTypeInArgList(var, ConsArgList(var, _, _))! => Absurd();
+Axiom Function(func, var, _, _, _) & VarTypeInFunction(var, func)! => ConflictingVariables();
+Axiom VarTypeInArgList(var, ConsArgList(var, _, _))! => ConflictingVariables();
 
 // ## Propagation of variables through lists
 //
@@ -524,7 +644,12 @@ Axiom VarTypeInArgList(var, ConsArgList(var, _, _))! => Absurd();
 
 Axiom VarTypeInStmts(var, tail) ~> VarTypeInStmts(var, ConsStmtNodeList(_, tail));
 Axiom VarTypeInArgList(var, tail) ~> VarTypeInArgList(var, ConsArgList(_, _, tail));
-Axiom VarTypeInExprs(var, tail) ~> VarTypeInExprs(var, ConsExprNodeList(_, tail));
+Axiom
+	VarTypeInExprs(var, ConsExprNodeList(head, tail)) = sigma
+	=>
+	VarTypeInExpr(var, head) = sigma
+  & VarTypeInExprs(var, tail) = sigma
+  ;
 
 // ## Propagating variables through nodes
 //
@@ -596,11 +721,11 @@ Axiom
 // Propagate variables through while statements.
 Axiom
     stmts = ConsStmtNodeList(head, _)
-    & WhileStmtNode(head, _, body)
+    & WhileStmtNode(head, cond, body)
+    & sigma = VarTypeInStmts(var, stmts)
     =>
-    VarTypeInStmts(var, body)
-    ~>
-    VarTypeInStmts(var, stmts)
+    VarTypeInStmts(var, body) = sigma
+    & VarTypeInExpr(var, cond) = sigma
     ;
 
 // Propagate variables through expression statements.
@@ -658,6 +783,8 @@ Axiom
 // Func ExprType : ExprNode -> Type;
 Func ExprTypes : ExprNodeList -> TypeList;
 
+// The substitutions associated to expressions with PolyTypes that must be instantiated into
+// MonoTypes.
 Func ExprSubstitution : ExprNode -> Substitution;
 
 // Both ExprType and ExprTypes are total. Our axioms enforce that ExprTypes is given by mapping
@@ -740,8 +867,18 @@ Axiom
 //
 // To detect whether a function has an implicit `return ();` in the end, we need to decide whether
 // the execution flow can reach the end of the function. Obviously this is undecidable in the
-// general case; our type system will thus consider this possible if there is a control flow path
-// through the function that does not traverse a return statement.
+// general case. Our type system will thus consider all possible paths through branches of function
+// body possible independently of which values expressions can assume. For example, in the function
+// 
+//   function foo () {
+//     if (true) {
+//       ...
+//     } else {
+//       ...
+//     }
+//   }
+//
+// we will consider the `else` branch potentially reachable.
 
 // CanProceedStmt(stmt) is true if execution can flow past this statement. CanProceedStmts(stmts)
 // is true if CanProceed holds for all statements in stmts.
@@ -767,7 +904,8 @@ Axiom IfStmtNode(stmt, _, _, false_branch) & CanProceedStmts(false_branch) => Ca
 Axiom WhileStmtNode(stmt, _, _) => CanProceedStmt(stmt);
 
 // ## Explicit return type analysis
-// Here we analyze which types the expression in explicitly return statements among a list of
+//
+// Here we analyze which types the expression in explicit return statements among a list of
 // statements have. The list of statements need not be the full body of a function, so we only care
 // about explicit returns, not the possible implicit `return ();` at the end of a function.
 // However, every list of statements can at most return expressions of a single type, so we can
@@ -806,7 +944,7 @@ Axiom
     ReturnsType(stmts) ~> ReturnsType(false_branch)
     ;
 
-// An while statement can return a type if its body can return that type.
+// A while statement can return a type if its body can return that type.
 Axiom
     stmts = ConsStmtNodeList(head, _)
     & WhileStmtNode(head, _, body)
@@ -831,7 +969,7 @@ Axiom
 // Typing constraints due to the types of function variables. Note that the types of argument
 // variables as given by VarInArgList were previously unified with the optional type annotation (an
 // opaque Type element if no annotation was given), which in turn were unified with the types
-// appearing SemanticArgTypes.
+// appearing in SemanticArgTypes.
 Axiom
     Function(func, _, args, _, _)
     =>
