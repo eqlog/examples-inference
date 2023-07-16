@@ -164,7 +164,18 @@ Axiom
     SemanticArgTypes(al)
     ;
 
-// ## Determining whether types are determined, i.e. do not contain unsolved type variables.
+// ## Determined types, i.e. those that do not contain unsolved type variables.
+//
+// In well-formed programs, every type should be determined.
+//
+// Without polymorphism, for example the following program contains an
+// undetermined type:
+//
+//   function foo(x) {}
+//
+// Here the type of `x` is not determined. Applying the function at least once on an argument with
+// determined type will determine the argument type of `foo` though, for example if we add the
+// statement `foo(5);`
 
 Pred DeterminedType : Type;
 Pred DeterminedTypes : TypeList;
