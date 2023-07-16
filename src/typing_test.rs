@@ -197,3 +197,14 @@ fn bad_conflicting_return_types_implicit() {
     .unwrap_err();
     assert_eq!(&err.to_string(), "Conflicting type constraints");
 }
+
+#[test]
+fn bad_non_well_founded_type() {
+    let err = check_source(&indoc! {"
+        function foo (x) {
+            x(x);
+        }
+    "})
+    .unwrap_err();
+    assert_eq!(&err.to_string(), "Conflicting type constraints");
+}

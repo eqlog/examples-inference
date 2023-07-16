@@ -242,6 +242,45 @@ Axiom
     DeterminedType(t)
     ;
 
+// ## Well-founded types
+//
+// Consider the following (invalid) function definition:
+//
+//   function foo (x) {
+//       x(x);
+//   }
+//
+// If a denotes the type of x, then a must be equal to the function type a => a, which is
+// unsatisfiable. To issue an error in cases such as this one, we introduce a binary predicate
+// SmallerType such that SmallerType(sigma, tau) holds if and only if sigma is structurally
+// strictly smaller than tau.  If we find that a type must be structurally smaller than itself,
+// then we generate an error.
+
+Pred SmallerType : Type * Type;
+Axiom SmallerType(sigma, tau) & SmallerType(tau, kappa) => SmallerType(sigma, kappa);
+
+Axiom SmallerType(sigma, sigma) => ConflictingTypes();
+
+// SmallerTypes(sigmas, tau) <=> forall sigma in sigma. SmallerType(sigma, tau)
+Pred SmallerTypes : TypeList * Type;
+Axiom sigmas = NilTypeList() & tau : Type => SmallerTypes(sigmas, tau);
+Axiom
+    SmallerTypes(ConsTypeList(head, tail), tau)
+    =>
+    SmallerType(head, tau)
+    & SmallerTypes(tail, tau)
+    ;
+Axiom
+    SmallerType(head, tau)
+    & SmallerTypes(tail, tau)
+    & sigmas = ConsTypeList(head, tail)
+    =>
+    SmallerTypes(sigmas, tau)
+    ;
+
+// All domain types and the codomain of a function type are smaller than the function type.
+Axiom kappa = FunctionType(sigmas, tau) => SmallerTypes(sigmas, kappa) & SmallerType(tau, kappa);
+
 // # Type contexts.
 Sort TypeContext;
 
