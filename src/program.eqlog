@@ -58,18 +58,18 @@ Pred Function : FunctionNode * Var * ArgList * TypeNodeOpt * StmtNodeList;
 
 // ## <Sort>NodeList operators.
 Pred NilExprNodeList : ExprNodeList;
-Func ConsExprNodeList : ExprNode * ExprNodeList -> ExprNodeList;
+Pred ConsExprNodeList : ExprNodeList * ExprNode * ExprNodeList;
 
 Pred NilStmtNodeList : StmtNodeList;
-Func ConsStmtNodeList : StmtNode * StmtNodeList -> StmtNodeList;
+Pred ConsStmtNodeList : StmtNodeList * StmtNode * StmtNodeList;
 
 // ## ArgList operators.
 Pred NilArgList : ArgList;
-Func ConsArgList : Var * TypeNodeOpt * ArgList -> ArgList;
+Pred ConsArgList : ArgList * Var * TypeNodeOpt * ArgList;
 
 // ## TypeNodeOpt operators.
 Pred NoneTypeNodeOpt : TypeNodeOpt;
-Func SomeTypeNodeOpt : TypeNode -> TypeNodeOpt;
+Pred SomeTypeNodeOpt : TypeNodeOpt * TypeNode;
 
 
 // # Semantic types.
@@ -155,11 +155,17 @@ Axiom
 // SemanticTypeOpt is total, but only for SomeTypeNodeOpt elements does it have a determined type.
 // If no other rules apply, it will be an opaque Type element determined only by the TypeNodeOpt
 // element.
-Axiom SemanticType(tn) ~> SemanticTypeOpt(SomeTypeNodeOpt(tn));
+Axiom
+	  SomeTypeNodeOpt(tno, tn)
+    =>
+    SemanticType(tn)
+    ~>
+		SemanticTypeOpt(tno)
+		;
 
 Axiom NilArgList(al) => NilTypeList() ~> SemanticArgTypes(al);
 Axiom
-    al = ConsArgList(_, head_type, tail)
+    ConsArgList(al, _, head_type, tail)
     =>
     ConsTypeList(SemanticTypeOpt(head_type), SemanticArgTypes(tail))
     ~>
@@ -573,7 +579,7 @@ Func FunctionNodeType : FunctionNode -> Type;
 
 // Every let statements introduces a variable.
 Axiom
-    ConsStmtNodeList(head, tail)!
+    ConsStmtNodeList(_, head, tail)
     & LetStmtNode(head, var, tno, expr)
     & expr_type = ExprType(expr)
     & mono_expr_type = MonoType(expr_type)
@@ -585,7 +591,7 @@ Axiom
 // Every function statement introduces a variable for statements occuring after the function
 // statement.
 Axiom
-    ConsStmtNodeList(head, _)!
+    ConsStmtNodeList(_ head, _)
     & FunctionStmtNode(head, func)
     & ctx = StmtTypeContext(head)
     & Function(func, _, _, _ ,_)
@@ -593,7 +599,7 @@ Axiom
     PolyType(ctx, FunctionNodeType(func))!
     ;
 Axiom
-    ConsStmtNodeList(head, tail)!
+    ConsStmtNodeList(_, head, tail)!
     & FunctionStmtNode(head, func)
     & ctx = StmtTypeContext(head)
     & Function(func, var, _, _ ,_)
@@ -615,7 +621,7 @@ Axiom
 
 // Every function argument introduces a variable.
 Axiom
-    ConsArgList(var, tno, tail)!
+    ConsArgList(_, var, tno, tail)
     =>
     VarTypeInArgList(var, tail)
     ~>
@@ -627,25 +633,27 @@ Axiom
 // For each base node case that introduces a variable, it is an error if the variable is already in
 // scope before the node.
 
-Axiom LetStmtNode(head, var, _, _) & VarTypeInStmts(var, ConsStmtNodeList(head, _))! => ConflictingVariables();
+Axiom LetStmtNode(head, var, _, _) & VarTypeInStmts(var, stmts)! & ConsStmtNodeList(stmts, head, _) => ConflictingVariables();
 Axiom
     FunctionStmtNode(head, func)
     & Function(func, var, _, _ ,_)
-    & VarTypeInStmts(var, ConsStmtNodeList(head, _))!
+    & VarTypeInStmts(var, stmts)!
+		& ConsStmtNodeList(stmts, head, _)
     =>
     ConflictingVariables()
     ;
 Axiom Function(func, var, _, _, _) & VarTypeInFunction(var, func)! => ConflictingVariables();
-Axiom VarTypeInArgList(var, ConsArgList(var, _, _))! => ConflictingVariables();
+Axiom VarTypeInArgList(var, al)! & ConsArgList(al, var, _, _) => ConflictingVariables();
 
 // ## Propagation of variables through lists
 //
 // If a variable is in scope for ConsX(head, tail), then it should also be in scope for tail.
 
-Axiom VarTypeInStmts(var, tail) ~> VarTypeInStmts(var, ConsStmtNodeList(_, tail));
-Axiom VarTypeInArgList(var, tail) ~> VarTypeInArgList(var, ConsArgList(_, _, tail));
+Axiom ConsStmtNodeList(stmts, _, tail) => VarTypeInStmts(var, tail) ~> VarTypeInStmts(var, stmts);
+Axiom ConsArgList(al, _, _, tail) => VarTypeInArgList(var, tail) ~> VarTypeInArgList(var, al);
 Axiom
-	VarTypeInExprs(var, ConsExprNodeList(head, tail)) = sigma
+	VarTypeInExprs(var, exprs) = sigma &
+	ConsExprNodeList(exprs, head, tail)
 	=>
 	VarTypeInExpr(var, head) = sigma
   & VarTypeInExprs(var, tail) = sigma
@@ -683,7 +691,7 @@ Axiom
 // opaque).
 Func RootNilArgList : ArgList -> ArgList;
 Axiom NilArgList(args) => RootNilArgList(args) = args;
-Axiom RootNilArgList(ConsArgList(_, _, tail)) ~> RootNilArgList(tail);
+Axiom ConsArgList(al, _, _, tail) => RootNilArgList(al) ~> RootNilArgList(tail);
 
 // Propagate variables from the arg list into the body.
 Axiom
@@ -699,7 +707,7 @@ Axiom
 // If a variable is in scope in the statement that defines a function, then the variable is also in
 // scope of the ArgList of that function (which then means that it is in scope for the body).
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & FunctionStmtNode(head, func)
     =>
     VarTypeInFunction(var, func)
@@ -709,7 +717,7 @@ Axiom
 
 // Propagate variables through if statements.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & IfStmtNode(head, cond, true_branch, false_branch)
     & VarTypeInStmts(var, stmts) = sigma
     =>
@@ -720,7 +728,7 @@ Axiom
 
 // Propagate variables through while statements.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & WhileStmtNode(head, cond, body)
     & sigma = VarTypeInStmts(var, stmts)
     =>
@@ -730,7 +738,7 @@ Axiom
 
 // Propagate variables through expression statements.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & ExprStmtNode(head, expr)
     =>
     VarTypeInExpr(var, expr)
@@ -740,7 +748,7 @@ Axiom
 
 // Propagate previously defined variables through let statements into initializer expressions.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & LetStmtNode(head, _, _, expr)
     =>
     VarTypeInExpr(var, expr)
@@ -750,7 +758,7 @@ Axiom
 
 // Propagate variables through return statements.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & ReturnStmtNode(head, expr)
     =>
     VarTypeInExpr(var, expr)
@@ -794,7 +802,7 @@ Axiom exprs: ExprNodeList => ExprTypes(exprs)!;
 
 Axiom NilExprNodeList(exprs) => NilTypeList() ~> ExprTypes(exprs);
 Axiom
-    exprs = ConsExprNodeList(head, tail)
+    ConsExprNodeList(exprs, head, tail)
     =>
     ConsTypeList(ExprType(head), ExprTypes(tail))
     ~>
@@ -887,7 +895,7 @@ Pred CanProceedStmts : StmtNodeList;
 
 Axiom NilStmtNodeList(stmts) => CanProceedStmts(stmts);
 Axiom
-    stmts = ConsStmtNodeList(head, tail)
+    ConsStmtNodeList(stmts, head, tail)
     & CanProceedStmt(head)
     & CanProceedStmts(tail)
     =>
@@ -914,17 +922,17 @@ Func ReturnsType : StmtNodeList -> Type;
 
 // If there is any suffix of a statement list that can return a given type, then the full list can
 // return that type.
-Axiom ReturnsType(ConsStmtNodeList(_, tail)) ~> ReturnsType(tail);
+Axiom ConsStmtNodeList(stmts, _, tail) => ReturnsType(stmts) ~> ReturnsType(tail);
 
 // Base cases for return statements with and without (i.e. void) expressions.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & ReturnStmtNode(head, return_value)
     =>
     ReturnsType(stmts) ~> ExprType(return_value)
     ;
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & ReturnVoidStmtNode(head)
     =>
     VoidType()!
@@ -932,13 +940,13 @@ Axiom
 
 // An if statement can return a type if at least one of its two branches returns that type.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & IfStmtNode(head, _, true_branch, _)
     =>
     ReturnsType(stmts) ~> ReturnsType(true_branch)
     ;
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & IfStmtNode(head, _, _, false_branch)
     =>
     ReturnsType(stmts) ~> ReturnsType(false_branch)
@@ -946,7 +954,7 @@ Axiom
 
 // A while statement can return a type if its body can return that type.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & WhileStmtNode(head, _, body)
     =>
     ReturnsType(stmts) ~> ReturnsType(body)
