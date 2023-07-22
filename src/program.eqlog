@@ -55,15 +55,15 @@ Pred Function : FunctionNode * Var * ArgList * TypeNodeOpt * StmtNodeList;
 
 // ## <Sort>NodeList operators.
 Pred NilExprNodeList : ExprNodeList;
-Func ConsExprNodeList : ExprNode * ExprNodeList -> ExprNodeList;
+Pred ConsExprNodeList : ExprNodeList * ExprNode * ExprNodeList;
 
 Pred NilStmtNodeList : StmtNodeList;
-Func ConsStmtNodeList : StmtNode * StmtNodeList -> StmtNodeList;
+Pred ConsStmtNodeList : StmtNodeList * StmtNode * StmtNodeList;
 
 // ## ArgList operators.
 Pred NilArgList : ArgList;
-Func ConsArgList : Var * TypeNodeOpt * ArgList -> ArgList;
+Pred ConsArgList : ArgList * Var * TypeNodeOpt * ArgList;
 
 // ## TypeNodeOpt operators.
 Pred NoneTypeNodeOpt : TypeNodeOpt;
-Func SomeTypeNodeOpt : TypeNode -> TypeNodeOpt;
+Pred SomeTypeNodeOpt : TypeNodeOpt * TypeNode;
