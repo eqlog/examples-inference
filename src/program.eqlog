@@ -510,7 +510,7 @@ Pred CanProceedStmts : StmtNodeList;
 
 Axiom NilStmtNodeList(stmts) => CanProceedStmts(stmts);
 Axiom
-    stmts = ConsStmtNodeList(head, tail)
+    ConsStmtNodeList(stmts, head, tail)
     & CanProceedStmt(head)
     & CanProceedStmts(tail)
     =>
@@ -537,17 +537,17 @@ Func ReturnsType : StmtNodeList -> Type;
 
 // If there is any suffix of a statement list that can return a given type, then the full list can
 // return that type.
-Axiom ReturnsType(ConsStmtNodeList(_, tail)) ~> ReturnsType(tail);
+Axiom ConsStmtNodeList(stmts, _, tail) => ReturnsType(stmts) ~> ReturnsType(tail);
 
 // Base cases for return statements with and without (i.e. void) expressions.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & ReturnStmtNode(head, return_value)
     =>
     ReturnsType(stmts) ~> ExprType(return_value)
     ;
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & ReturnVoidStmtNode(head)
     =>
     VoidType()!
@@ -555,13 +555,13 @@ Axiom
 
 // An if statement can return a type if at least one of its two branches returns that type.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & IfStmtNode(head, _, true_branch, _)
     =>
     ReturnsType(stmts) ~> ReturnsType(true_branch)
     ;
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & IfStmtNode(head, _, _, false_branch)
     =>
     ReturnsType(stmts) ~> ReturnsType(false_branch)
@@ -569,7 +569,7 @@ Axiom
 
 // A while statement can return a type if its body can return that type.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & WhileStmtNode(head, _, body)
     =>
     ReturnsType(stmts) ~> ReturnsType(body)
