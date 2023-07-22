@@ -57,18 +57,18 @@ Pred Function : FunctionNode * Var * ArgList * TypeNodeOpt * StmtNodeList;
 
 // ## <Sort>NodeList operators.
 Pred NilExprNodeList : ExprNodeList;
-Func ConsExprNodeList : ExprNode * ExprNodeList -> ExprNodeList;
+Pred ConsExprNodeList : ExprNodeList * ExprNode * ExprNodeList;
 
 Pred NilStmtNodeList : StmtNodeList;
-Func ConsStmtNodeList : StmtNode * StmtNodeList -> StmtNodeList;
+Pred ConsStmtNodeList : StmtNodeList * StmtNode * StmtNodeList;
 
 // ## ArgList operators.
 Pred NilArgList : ArgList;
-Func ConsArgList : Var * TypeNodeOpt * ArgList -> ArgList;
+Pred ConsArgList : ArgList * Var * TypeNodeOpt * ArgList;
 
 // ## TypeNodeOpt operators.
 Pred NoneTypeNodeOpt : TypeNodeOpt;
-Func SomeTypeNodeOpt : TypeNode -> TypeNodeOpt;
+Pred SomeTypeNodeOpt : TypeNodeOpt * TypeNode;
 
 
 // # Semantic types.
@@ -152,11 +152,17 @@ Axiom
 // SemanticTypeOpt is total, but only for SomeTypeNodeOpt elements does it have a determined type.
 // If no other rules apply, it will be an opaque Type element determined only by the TypeNodeOpt
 // element.
-Axiom SemanticType(tn) ~> SemanticTypeOpt(SomeTypeNodeOpt(tn));
+Axiom
+	  SomeTypeNodeOpt(tno, tn)
+    =>
+    SemanticType(tn)
+    ~>
+		SemanticTypeOpt(tno)
+		;
 
 Axiom NilArgList(al) => NilTypeList() ~> SemanticArgTypes(al);
 Axiom
-    al = ConsArgList(_, head_type, tail)
+    ConsArgList(al, _, head_type, tail)
     =>
     ConsTypeList(SemanticTypeOpt(head_type), SemanticArgTypes(tail))
     ~>
