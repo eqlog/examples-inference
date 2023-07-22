@@ -238,7 +238,7 @@ Func ExprType : ExprNode -> Type;
 // Every let statements introduces a variable.
 Axiom
     ConsStmtNodeList(_, head, tail)
-    & LetStmtNode(head, var, _, _)
+    & LetStmtNode(head, var, tno, expr)
     & expr_type = ExprType(expr)
     =>
     expr_type = SemanticTypeOpt(tno)
@@ -449,7 +449,7 @@ Axiom exprs: ExprNodeList => ExprTypes(exprs)!;
 
 Axiom NilExprNodeList(exprs) => NilTypeList() ~> ExprTypes(exprs);
 Axiom
-    exprs = ConsExprNodeList(head, tail)
+    ConsExprNodeList(exprs, head, tail)
     =>
     ConsTypeList(ExprType(head), ExprTypes(tail))
     ~>
