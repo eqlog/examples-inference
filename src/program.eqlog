@@ -234,7 +234,7 @@ Func VarTypeInExprs : Var * ExprNodeList -> Type;
 
 // Every let statements introduces a variable.
 Axiom
-    ConsStmtNodeList(head, tail)!
+    ConsStmtNodeList(_, head, tail)
     & LetStmtNode(head, var, _, _)
     =>
     VarTypeInStmts(var, tail)!
@@ -243,7 +243,7 @@ Axiom
 // Every function statement introduces a variable for statements occuring after the function
 // statement.
 Axiom
-    ConsStmtNodeList(head, tail)!
+    ConsStmtNodeList(_, head, tail)
     & FunctionStmtNode(head, func)
     & Function(func, var, _, _ ,_)
     =>
@@ -260,7 +260,7 @@ Axiom
 
 // Every function argument introduces a variable.
 Axiom
-    ConsArgList(var, _, tail)!
+    ConsArgList(_, var, _, tail)
     =>
     VarTypeInArgList(var, tail)!
     ;
@@ -270,25 +270,27 @@ Axiom
 // For each base node case that introduces a variable, it is an error if the variable is already in
 // scope before the node.
 
-Axiom LetStmtNode(head, var, _, _) & VarTypeInStmts(var, ConsStmtNodeList(head, _))! => ConflictingVariables();
+Axiom LetStmtNode(head, var, _, _) & VarTypeInStmts(var, stmts)! & ConsStmtNodeList(stmts, head, _) => ConflictingVariables();
 Axiom
     FunctionStmtNode(head, func)
     & Function(func, var, _, _ ,_)
-    & VarTypeInStmts(var, ConsStmtNodeList(head, _))!
+    & VarTypeInStmts(var, stmts)!
+		& ConsStmtNodeList(stmts, head, _)
     =>
     ConflictingVariables()
     ;
 Axiom Function(func, var, _, _, _) & VarTypeInFunction(var, func)! => ConflictingVariables();
-Axiom VarTypeInArgList(var, ConsArgList(var, _, _))! => ConflictingVariables();
+Axiom VarTypeInArgList(var, al)! & ConsArgList(al, var, _, _) => ConflictingVariables();
 
 // ## Propagation of variables through lists
 //
 // If a variable is in scope for ConsX(head, tail), then it should also be in scope for tail.
 
-Axiom VarTypeInStmts(var, tail) ~> VarTypeInStmts(var, ConsStmtNodeList(_, tail));
-Axiom VarTypeInArgList(var, tail) ~> VarTypeInArgList(var, ConsArgList(_, _, tail));
+Axiom ConsStmtNodeList(stmts, _, tail) => VarTypeInStmts(var, tail) ~> VarTypeInStmts(var, stmts);
+Axiom ConsArgList(al, _, _, tail) => VarTypeInArgList(var, tail) ~> VarTypeInArgList(var, al);
 Axiom
-	VarTypeInExprs(var, ConsExprNodeList(head, tail)) = sigma
+	VarTypeInExprs(var, exprs) = sigma &
+	ConsExprNodeList(exprs, head, tail)
 	=>
 	VarTypeInExpr(var, head) = sigma
   & VarTypeInExprs(var, tail) = sigma
@@ -333,7 +335,7 @@ Axiom
 // opaque).
 Func RootNilArgList : ArgList -> ArgList;
 Axiom NilArgList(args) => RootNilArgList(args) = args;
-Axiom RootNilArgList(ConsArgList(_, _, tail)) ~> RootNilArgList(tail);
+Axiom ConsArgList(al, _, _, tail) => RootNilArgList(al) ~> RootNilArgList(tail);
 
 // Propagate variables from the arg list into the body.
 Axiom
@@ -349,7 +351,7 @@ Axiom
 // If a variable is in scope in the statement that defines a function, then the variable is also in
 // scope of the ArgList of that function (which then means that it is in scope for the body).
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & FunctionStmtNode(head, func)
     =>
     VarTypeInFunction(var, func)
@@ -359,7 +361,7 @@ Axiom
 
 // Propagate variables through if statements.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & IfStmtNode(head, cond, true_branch, false_branch)
     & VarTypeInStmts(var, stmts) = sigma
     =>
@@ -370,7 +372,7 @@ Axiom
 
 // Propagate variables through while statements.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & WhileStmtNode(head, cond, body)
     & sigma = VarTypeInStmts(var, stmts)
     =>
@@ -380,7 +382,7 @@ Axiom
 
 // Propagate variables through expression statements.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & ExprStmtNode(head, expr)
     =>
     VarTypeInExpr(var, expr)
@@ -390,7 +392,7 @@ Axiom
 
 // Propagate previously defined variables through let statements into initializer expressions.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & LetStmtNode(head, _, _, expr)
     =>
     VarTypeInExpr(var, expr)
@@ -400,7 +402,7 @@ Axiom
 
 // Propagate variables through return statements.
 Axiom
-    stmts = ConsStmtNodeList(head, _)
+    ConsStmtNodeList(stmts, head, _)
     & ReturnStmtNode(head, expr)
     =>
     VarTypeInExpr(var, expr)
