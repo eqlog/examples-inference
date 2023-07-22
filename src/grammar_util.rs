@@ -43,7 +43,9 @@ pub fn expr_node_list(nodes: &[ExprNode], p: &mut Program) -> ExprNodeList {
     let mut l = p.new_expr_node_list();
     p.insert_nil_expr_node_list(l);
     for node in nodes.iter().rev() {
-        l = p.define_cons_expr_node_list(*node, l);
+        let cons = p.new_expr_node_list();
+        p.insert_cons_expr_node_list(cons, *node, l);
+        l = cons;
     }
     l
 }
@@ -52,27 +54,33 @@ pub fn stmt_node_list(nodes: &[StmtNode], p: &mut Program) -> StmtNodeList {
     let mut l = p.new_stmt_node_list();
     p.insert_nil_stmt_node_list(l);
     for node in nodes.iter().rev() {
-        l = p.define_cons_stmt_node_list(*node, l);
+        let cons = p.new_stmt_node_list();
+        p.insert_cons_stmt_node_list(cons, *node, l);
+        l = cons;
     }
     l
 }
 
 pub fn type_node_opt(node: Option<TypeNode>, p: &mut Program) -> TypeNodeOpt {
+    let tno = p.new_type_node_opt();
     match node {
-        Some(node) => p.define_some_type_node_opt(node),
+        Some(node) => {
+            p.insert_some_type_node_opt(tno, node);
+        }
         None => {
-            let tno = p.new_type_node_opt();
             p.insert_none_type_node_opt(tno);
-            tno
         }
     }
+    tno
 }
 
 pub fn arg_list(args: &[(Var, TypeNodeOpt)], p: &mut Program) -> ArgList {
     let mut l = p.new_arg_list();
     p.insert_nil_arg_list(l);
     for (var, ty) in args.iter().rev() {
-        l = p.define_cons_arg_list(*var, *ty, l);
+        let cons = p.new_arg_list();
+        p.insert_cons_arg_list(cons, *var, *ty, l);
+        l = cons;
     }
     l
 }
