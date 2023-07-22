@@ -236,7 +236,7 @@ Axiom
     ;
 
 Axiom
-    ConsArgList(_, tno, _)!
+    ConsArgList(_, _, tno, _)
     & t = SemanticTypeOpt(tno)
     =>
     DeterminedType(t)
@@ -388,7 +388,7 @@ Axiom
 
 // The type of a function argument is in the context of the arg list of the function.
 Axiom
-    arg_list = ConsArgList(head_var, _, tail)
+    ConsArgList(arg_list, head_var, _, tail)
     // The type of a variable is only in recorded after the variable has been introduced.
     & MonoType(sigma) = VarTypeInArgList(head_var, tail)
     & ctx = ArgListContext(arg_list)
@@ -398,18 +398,21 @@ Axiom
 
 // Relate type contexts of node lists with the type contexts of individual nodes in the lists.
 Axiom
-    ArgListContext(ConsArgList(_, _, tail)) = ctx
+		ConsArgList(al, _, _, tail)
+    & ArgListContext(al) = ctx
     =>
     & ArgListContext(tail) = ctx
     ;
 Axiom
-    StmtsTypeContext(ConsStmtNodeList(head, tail)) = ctx
+		ConsStmtNodeList(stmts, head, tail)
+    & StmtsTypeContext(stmts) = ctx
     =>
     StmtTypeContext(head) = ctx
     & StmtsTypeContext(tail) = ctx
     ;
 Axiom
-    ExprsTypeContext(ConsExprNodeList(head, tail)) = ctx
+		ConsExprNodeList(stmts, head, tail)
+    & ExprsTypeContext(stmts) = ctx
     =>
     ExprTypeContext(head) = ctx
     & ExprsTypeContext(tail) = ctx
@@ -591,7 +594,7 @@ Axiom
 // Every function statement introduces a variable for statements occuring after the function
 // statement.
 Axiom
-    ConsStmtNodeList(_ head, _)
+    ConsStmtNodeList(_, head, _)
     & FunctionStmtNode(head, func)
     & ctx = StmtTypeContext(head)
     & Function(func, _, _, _ ,_)
@@ -599,7 +602,7 @@ Axiom
     PolyType(ctx, FunctionNodeType(func))!
     ;
 Axiom
-    ConsStmtNodeList(_, head, tail)!
+    ConsStmtNodeList(_, head, tail)
     & FunctionStmtNode(head, func)
     & ctx = StmtTypeContext(head)
     & Function(func, var, _, _ ,_)
