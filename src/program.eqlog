@@ -2,13 +2,13 @@
 Sort ModuleNode;
 
 Sort TypeNode;
-Sort TypeNodeOpt;
+Sort OptTypeNode;
 
 Sort ExprNode;
-Sort ExprNodeList;
+Sort ExprListNode;
 
 Sort StmtNode;
-Sort StmtNodeList;
+Sort StmtListNode;
 
 Sort FunctionNode;
 
@@ -16,17 +16,17 @@ Sort Var;
 Sort StringLiteral;
 Sort NumberLiteral;
 
-Sort ArgList;
+Sort ArgListNode;
 
 // Module(node, top_lvl_stmts)
-Pred Module : ModuleNode * StmtNodeList;
+Pred Module : ModuleNode * StmtListNode;
 
 Pred VoidTypeNode : TypeNode;
 Pred BooleanTypeNode : TypeNode;
 Pred NumberTypeNode : TypeNode;
 Pred StringTypeNode : TypeNode;
 // FunctionTypeNode(node, domain, codomain)
-Pred FunctionTypeNode : TypeNode * ArgList * TypeNode;
+Pred FunctionTypeNode : TypeNode * ArgListNode * TypeNode;
 
 Pred VariableExprNode : ExprNode * Var;
 Pred VoidExprNode : ExprNode;
@@ -35,35 +35,35 @@ Pred TrueExprNode : ExprNode;
 Pred StringLiteralExprNode : ExprNode * StringLiteral;
 Pred NumberLiteralExprNode : ExprNode * NumberLiteral;
 // AppExprNode(node, func, args)
-Pred AppExprNode : ExprNode * ExprNode * ExprNodeList;
+Pred AppExprNode : ExprNode * ExprNode * ExprListNode;
 Pred FunctionExprNode : ExprNode * FunctionNode;
 
 Pred ExprStmtNode : StmtNode * ExprNode;
 // LetStmtNode(node, var, initial_value)
-Pred LetStmtNode : StmtNode * Var * TypeNodeOpt * ExprNode;
+Pred LetStmtNode : StmtNode * Var * OptTypeNode * ExprNode;
 // ReturnStmtNode(node, return_value)
 Pred ReturnStmtNode : StmtNode * ExprNode;
 Pred ReturnVoidStmtNode : StmtNode;
 Pred FunctionStmtNode : StmtNode * FunctionNode;
 // IfStmtNode(node, condition, true_branch, false_branch)
-Pred IfStmtNode : StmtNode * ExprNode * StmtNodeList * StmtNodeList;
+Pred IfStmtNode : StmtNode * ExprNode * StmtListNode * StmtListNode;
 // WhileStmtNode(node, condition, body)
-Pred WhileStmtNode : StmtNode * ExprNode * StmtNodeList;
+Pred WhileStmtNode : StmtNode * ExprNode * StmtListNode;
 
 // Function(node, function_name, domain, codomain, body)
-Pred Function : FunctionNode * Var * ArgList * TypeNodeOpt * StmtNodeList;
+Pred Function : FunctionNode * Var * ArgListNode * OptTypeNode * StmtListNode;
 
 // ## <Sort>NodeList operators.
-Pred NilExprNodeList : ExprNodeList;
-Pred ConsExprNodeList : ExprNodeList * ExprNode * ExprNodeList;
+Pred NilExprListNode : ExprListNode;
+Pred ConsExprListNode : ExprListNode * ExprNode * ExprListNode;
 
-Pred NilStmtNodeList : StmtNodeList;
-Pred ConsStmtNodeList : StmtNodeList * StmtNode * StmtNodeList;
+Pred NilStmtListNode : StmtListNode;
+Pred ConsStmtListNode : StmtListNode * StmtNode * StmtListNode;
 
-// ## ArgList operators.
-Pred NilArgList : ArgList;
-Pred ConsArgList : ArgList * Var * TypeNodeOpt * ArgList;
+// ## ArgListNode operators.
+Pred NilArgListNode : ArgListNode;
+Pred ConsArgListNode : ArgListNode * Var * OptTypeNode * ArgListNode;
 
-// ## TypeNodeOpt operators.
-Pred NoneTypeNodeOpt : TypeNodeOpt;
-Pred SomeTypeNodeOpt : TypeNodeOpt * TypeNode;
+// ## OptTypeNode operators.
+Pred NoneOptTypeNode : OptTypeNode;
+Pred SomeOptTypeNode : OptTypeNode * TypeNode;
