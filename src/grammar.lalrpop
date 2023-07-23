@@ -164,7 +164,7 @@ Expr1: ExprNode = {
     <expr: Expr0> => expr,
     <lhs: Expr0> "==" <rhs: Expr0> => {
         let expr = p.new_expr_node();
-        p.insert_equal_expr_node(expr, lhs, rhs);
+        p.insert_equals_expr_node(expr, lhs, rhs);
         expr
     },
 }
