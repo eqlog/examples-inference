@@ -37,6 +37,7 @@ Pred FalseExprNode : ExprNode;
 Pred TrueExprNode : ExprNode;
 Pred StringLiteralExprNode : ExprNode * StringLiteral;
 Pred NumberLiteralExprNode : ExprNode * NumberLiteral;
+Pred EqualsExprNode : ExprNode * ExprNode * ExprNode;
 // AppExprNode(node, func, args)
 Pred AppExprNode : ExprNode * ExprNode * ExprListNode;
 Pred FunctionExprNode : ExprNode * FunctionNode;
@@ -771,6 +772,15 @@ Axiom
 
 // ### Propagating variables through expressions
 
+// Propagate variables through equality expressions.
+Axiom
+    EqualsExprNode(expr, lhs, rhs)
+    & VarTypeInExpr(var, expr) = sigma
+    =>
+    VarTypeInExpr(var, lhs) = sigma
+    & VarTypeInExpr(var, rhs) = sigma
+    ;
+
 // Propagate variables through function application expressions.
 Axiom
     AppExprNode(expr, func, args)
@@ -845,6 +855,17 @@ Axiom FalseExprNode(expr) => BooleanType() ~> ExprType(expr);
 Axiom TrueExprNode(expr) => BooleanType() ~> ExprType(expr);
 Axiom StringLiteralExprNode(expr, _) => StringType() ~> ExprType(expr);
 Axiom NumberLiteralExprNode(expr, _) => NumberType() ~> ExprType(expr);
+
+Axiom
+	  EqualsExprNode(eq, lhs, rhs)
+    & eq_type = ExprType(eq)
+	  & lhs_type = ExprType(lhs)
+    & rhs_type = ExprType(rhs)
+    =>
+    eq_type = BooleanType()
+    & lhs_type = rhs_type
+    ;
+  
 
 // The conclusions of these axioms assert that DomainTypes or CodomainType are defined on some
 // types tau. By the axioms relating these functions to FunctionType, this means that such types
