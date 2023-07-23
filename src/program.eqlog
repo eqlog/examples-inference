@@ -130,7 +130,7 @@ Func SemanticOptType : OptTypeNode -> Type;
 Func SemanticArgTypes : ArgListNode -> TypeList;
 
 Axiom tn: TypeNode => SemanticType(tn)!;
-Axiom tno: OptTypeNode => SemanticOptType(tno)!;
+Axiom otn: OptTypeNode => SemanticOptType(otn)!;
 Axiom ag: ArgListNode => SemanticArgTypes(ag)!;
 
 // Since another axiom enforces that SemanticType is total, these rules will fire for all
@@ -153,11 +153,11 @@ Axiom
 // If no other rules apply, it will be an opaque Type element determined only by the OptTypeNode
 // element.
 Axiom
-	  SomeOptTypeNode(tno, tn)
+	  SomeOptTypeNode(otn, tn)
     =>
     SemanticType(tn)
     ~>
-		SemanticOptType(tno)
+		SemanticOptType(otn)
 		;
 
 Axiom NilArgListNode(al) => NilTypeList() ~> SemanticArgTypes(al);
