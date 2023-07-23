@@ -36,6 +36,7 @@ Pred FalseExprNode : ExprNode;
 Pred TrueExprNode : ExprNode;
 Pred StringLiteralExprNode : ExprNode * StringLiteral;
 Pred NumberLiteralExprNode : ExprNode * NumberLiteral;
+Pred EqualExprNode : ExprNode * ExprNode * ExprNode;
 // AppExprNode(node, func, args)
 Pred AppExprNode : ExprNode * ExprNode * ExprListNode;
 Pred FunctionExprNode : ExprNode * FunctionNode;
