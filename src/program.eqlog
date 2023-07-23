@@ -478,6 +478,17 @@ Axiom TrueExprNode(expr) => BooleanType() ~> ExprType(expr);
 Axiom StringLiteralExprNode(expr, _) => StringType() ~> ExprType(expr);
 Axiom NumberLiteralExprNode(expr, _) => NumberType() ~> ExprType(expr);
 
+Axiom
+	  EqualsExprNode(eq, lhs, rhs)
+    & eq_type = ExprType(eq)
+	  & lhs_type = ExprType(lhs)
+    & rhs_type = ExprType(rhs)
+    =>
+    eq_type = BooleanType()
+    & lhs_type = rhs_type
+    ;
+  
+
 // The conclusions of these axioms assert that DomainTypes or CodomainType are defined on some
 // types tau. By the axioms relating these functions to FunctionType, this means that such types
 // tau must be function types.
