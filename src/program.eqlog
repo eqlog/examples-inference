@@ -238,10 +238,10 @@ Func ExprType : ExprNode -> Type;
 // Every let statements introduces a variable.
 Axiom
     ConsStmtListNode(_, head, tail)
-    & LetStmtNode(head, var, tno, expr)
+    & LetStmtNode(head, var, otn, expr)
     & expr_type = ExprType(expr)
     =>
-    expr_type = SemanticOptType(tno)
+    expr_type = SemanticOptType(otn)
     & VarTypeInStmts(var, tail) = expr_type
     ;
 
@@ -265,11 +265,11 @@ Axiom
 
 // Every function argument introduces a variable.
 Axiom
-    ConsArgListNode(_, var, tno, tail)
+    ConsArgListNode(_, var, otn, tail)
     =>
     VarTypeInArgListNode(var, tail)
     ~>
-    SemanticOptType(tno)
+    SemanticOptType(otn)
     ;
 
 // ## Errors due to multiple introductions of the same variable
