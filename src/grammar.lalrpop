@@ -118,7 +118,7 @@ Function: FunctionNode = {
     },
 }
 
-SimpleExpr: ExprNode = {
+Expr0: ExprNode = {
     <var: Var> => {
         let expr = p.new_expr_node();
         p.insert_variable_expr_node(expr, var);
@@ -151,7 +151,7 @@ SimpleExpr: ExprNode = {
     },
     // This would result in a shift-reduce conflict if we made `function` an `Expr` instead of a
     // `SimpleExpr`:
-    <function: SimpleExpr> "(" <args: Intersperse<Expr, ",">> ")" => {
+    <function: Expr0> "(" <args: Intersperse<Expr, ",">> ")" => {
         let args = expr_list_node(args.as_slice(), p);
         let expr = p.new_expr_node();
         p.insert_app_expr_node(expr, function, args);
@@ -160,8 +160,17 @@ SimpleExpr: ExprNode = {
     "(" <expr: Expr> ")" => expr,
 }
 
+Expr1: ExprNode = {
+    <expr: Expr0> => expr,
+    <lhs: Expr0> "==" <rhs: Expr0> => {
+        let expr = p.new_expr_node();
+        p.insert_equal_expr_node(expr, lhs, rhs);
+        expr
+    },
+}
+
 Expr: ExprNode = {
-    <expr: SimpleExpr> => expr,
+    <expr: Expr1> => expr,
     <function: Function> => {
         let expr = p.new_expr_node();
         p.insert_function_expr_node(expr, function);
