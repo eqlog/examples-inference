@@ -413,6 +413,15 @@ Axiom
 
 // ### Propagating variables through expressions
 
+// Propagate variables through equality expressions.
+Axiom
+    EqualExprNode(expr, lhs, rhs)
+    & VarTypeInExpr(var, expr) = sigma
+    =>
+    VarTypeInExpr(var, lhs) = sigma
+    & VarTypeInExpr(var, rhs) = sigma
+    ;
+
 // Propagate variables through function application expressions.
 Axiom
     AppExprNode(expr, func, args)
