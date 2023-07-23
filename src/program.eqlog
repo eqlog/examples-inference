@@ -133,7 +133,7 @@ Func SemanticOptType : OptTypeNode -> Type;
 Func SemanticArgTypes : ArgListNode -> TypeList;
 
 Axiom tn: TypeNode => SemanticType(tn)!;
-Axiom tno: OptTypeNode => SemanticOptType(tno)!;
+Axiom otn: OptTypeNode => SemanticOptType(otn)!;
 Axiom ag: ArgListNode => SemanticArgTypes(ag)!;
 
 // Since another axiom enforces that SemanticType is total, these rules will fire for all
@@ -156,11 +156,11 @@ Axiom
 // If no other rules apply, it will be an opaque Type element determined only by the OptTypeNode
 // element.
 Axiom
-	  SomeOptTypeNode(tno, tn)
+	  SomeOptTypeNode(otn, tn)
     =>
     SemanticType(tn)
     ~>
-		SemanticOptType(tno)
+		SemanticOptType(otn)
 		;
 
 Axiom NilArgListNode(al) => NilTypeList() ~> SemanticArgTypes(al);
@@ -236,14 +236,14 @@ Axiom
     ;
 
 Axiom
-    ConsArgListNode(_, _, tno, _)
-    & t = SemanticOptType(tno)
+    ConsArgListNode(_, _, otn, _)
+    & t = SemanticOptType(otn)
     =>
     DeterminedType(t)
     ;
 Axiom
-    Function(_, _, _, codomain_tno, _)
-    & t = SemanticOptType(codomain_tno)
+    Function(_, _, _, codomain_otn, _)
+    & t = SemanticOptType(codomain_otn)
     =>
     DeterminedType(t)
     ;
@@ -583,11 +583,11 @@ Func FunctionNodeType : FunctionNode -> Type;
 // Every let statements introduces a variable.
 Axiom
     ConsStmtListNode(_, head, tail)
-    & LetStmtNode(head, var, tno, expr)
+    & LetStmtNode(head, var, otn, expr)
     & expr_type = ExprType(expr)
     & mono_expr_type = MonoType(expr_type)
     =>
-    expr_type = SemanticOptType(tno)
+    expr_type = SemanticOptType(otn)
     & VarTypeInStmts(var, tail) = mono_expr_type
     ;
 
@@ -624,11 +624,11 @@ Axiom
 
 // Every function argument introduces a variable.
 Axiom
-    ConsArgListNode(_, var, tno, tail)
+    ConsArgListNode(_, var, otn, tail)
     =>
     VarTypeInArgListNode(var, tail)
     ~>
-    MonoType(SemanticOptType(tno))
+    MonoType(SemanticOptType(otn))
     ;
 
 // ## Errors due to multiple introductions of the same variable
