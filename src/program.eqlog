@@ -37,6 +37,7 @@ Pred FalseExprNode : ExprNode;
 Pred TrueExprNode : ExprNode;
 Pred StringLiteralExprNode : ExprNode * StringLiteral;
 Pred NumberLiteralExprNode : ExprNode * NumberLiteral;
+Pred EqualsExprNode : ExprNode * ExprNode * ExprNode;
 // AppExprNode(node, func, args)
 Pred AppExprNode : ExprNode * ExprNode * ExprListNode;
 Pred FunctionExprNode : ExprNode * FunctionNode;
@@ -418,6 +419,15 @@ Axiom
     ;
 
 // ### Propagating variables through expressions
+
+// Propagate variables through equality expressions.
+Axiom
+    EqualsExprNode(expr, lhs, rhs)
+    & VarTypeInExpr(var, expr) = sigma
+    =>
+    VarTypeInExpr(var, lhs) = sigma
+    & VarTypeInExpr(var, rhs) = sigma
+    ;
 
 // Propagate variables through function application expressions.
 Axiom

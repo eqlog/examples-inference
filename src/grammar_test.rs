@@ -289,3 +289,36 @@ fn bad_app_expr_missing_arg_comma() {
     .unwrap_err();
     assert_eq!(&err.to_string(), "Syntax error at 4:8");
 }
+
+#[test]
+fn bad_equals_missing_lhs() {
+    let err = check_source(&indoc! {"
+        if (== 5) {
+        } else {
+        }
+    "})
+    .unwrap_err();
+    assert_eq!(&err.to_string(), "Syntax error at 1:5");
+}
+
+#[test]
+fn bad_equals_missing_rhs() {
+    let err = check_source(&indoc! {"
+        if (5 == ) {
+        } else {
+        }
+    "})
+    .unwrap_err();
+    assert_eq!(&err.to_string(), "Syntax error at 1:10");
+}
+
+#[test]
+fn bad_equals_doesnt_associate() {
+    let err = check_source(&indoc! {"
+        if (5 == 3 == 2) {
+        } else {
+        }
+    "})
+    .unwrap_err();
+    assert_eq!(&err.to_string(), "Syntax error at 1:12");
+}
