@@ -68,15 +68,15 @@ Intersperse<Item, Separator>: Vec<Item> = {
 }
 
 
-VarOptType: (Var, TypeNodeOpt) = {
+VarOptType: (Var, OptTypeNode) = {
     <var: Var> <ty: PairSecond<":", Type>?> => {
-        let ty: TypeNodeOpt = type_node_opt(ty, p);
+        let ty: OptTypeNode = opt_type_node(ty, p);
         (var, ty)
     }
 }
-ArgList: ArgList = {
+ArgList: ArgListNode = {
     "(" <args: Intersperse<VarOptType, ",">> ")" => {
-        arg_list(args.as_slice(), p)
+        arg_list_node(args.as_slice(), p)
     }
 }
 
@@ -110,8 +110,8 @@ Type: TypeNode = {
 
 Function: FunctionNode = {
     "function" <name: Var> <domain: ArgList> <codomain: PairSecond<":", Type>?> "{" <body: Stmt*> "}" => {
-        let body = stmt_node_list(body.as_slice(), p);
-        let codomain = type_node_opt(codomain, p);
+        let body = stmt_list_node(body.as_slice(), p);
+        let codomain = opt_type_node(codomain, p);
         let function_node = p.new_function_node();
         p.insert_function(function_node, name, domain, codomain, body);
         function_node
@@ -152,7 +152,7 @@ SimpleExpr: ExprNode = {
     // This would result in a shift-reduce conflict if we made `function` an `Expr` instead of a
     // `SimpleExpr`:
     <function: SimpleExpr> "(" <args: Intersperse<Expr, ",">> ")" => {
-        let args = expr_node_list(args.as_slice(), p);
+        let args = expr_list_node(args.as_slice(), p);
         let expr = p.new_expr_node();
         p.insert_app_expr_node(expr, function, args);
         expr
@@ -169,9 +169,9 @@ Expr: ExprNode = {
     }
 }
 
-Block: StmtNodeList = {
+Block: StmtListNode = {
     "{" <stmts: Stmt*> "}" => {
-        stmt_node_list(stmts.as_slice(), p)
+        stmt_list_node(stmts.as_slice(), p)
     }
 }
 
@@ -216,7 +216,7 @@ Stmt: StmtNode = {
 
 pub Module: ModuleNode = {
     <stmts: Stmt*> => {
-        let stmts = stmt_node_list(stmts.as_slice(), p);
+        let stmts = stmt_list_node(stmts.as_slice(), p);
         let mn = p.new_module_node();
         p.insert_module(mn, stmts);
         mn
