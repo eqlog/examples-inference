@@ -415,7 +415,7 @@ Axiom
 
 // Propagate variables through equality expressions.
 Axiom
-    EqualExprNode(expr, lhs, rhs)
+    EqualsExprNode(expr, lhs, rhs)
     & VarTypeInExpr(var, expr) = sigma
     =>
     VarTypeInExpr(var, lhs) = sigma
