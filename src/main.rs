@@ -34,8 +34,8 @@ fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageEr
     }
 
     for (expr, var) in p.iter_variable_expr_node() {
-        if p.iter_var_in_expr()
-            .find(|(var0, expr0)| {
+        if p.iter_var_type_in_expr()
+            .find(|(var0, expr0, _)| {
                 p.are_equal_expr_node(*expr0, expr) && p.are_equal_var(*var0, var)
             })
             .is_none()
