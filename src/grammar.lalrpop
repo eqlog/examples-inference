@@ -150,7 +150,7 @@ Expr0: ExprNode = {
         expr
     },
     // This would result in a shift-reduce conflict if we made `function` an `Expr` instead of a
-    // `SimpleExpr`:
+    // `Expr0`:
     <function: Expr0> "(" <args: Intersperse<Expr, ",">> ")" => {
         let args = expr_list_node(args.as_slice(), p);
         let expr = p.new_expr_node();
