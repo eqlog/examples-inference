@@ -246,3 +246,15 @@ fn bad_conflicting_return_types_implicit() {
     .unwrap_err();
     assert_eq!(&err.to_string(), "Conflicting type constraints");
 }
+
+#[test]
+fn bad_type_usage_function() {
+    let err = check_source(&indoc! {"
+        let x: number = 5;
+        function foo() {
+            let y: string = x;
+        }
+    "})
+    .unwrap_err();
+    assert_eq!(&err.to_string(), "Conflicting type constraints");
+}

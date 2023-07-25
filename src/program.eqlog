@@ -352,9 +352,9 @@ Axiom
 // Propagate ambient variables into arg lists.
 Axiom
     Function(func, _, args, _, _)
-    & VarTypeInFunction(var, func)!
+    & sigma = VarTypeInFunction(var, func)
     =>
-    VarTypeInArgList(var, args)!
+    VarTypeInArgList(var, args) = sigma
     ;
 
 // Propagate function names into arg lists.
