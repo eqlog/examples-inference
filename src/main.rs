@@ -3,6 +3,8 @@ use lalrpop_util::lalrpop_mod;
 eqlog_mod!(program);
 mod grammar_util;
 lalrpop_mod!(grammar);
+#[cfg(test)]
+mod binding_test;
 mod error;
 #[cfg(test)]
 mod grammar_test;
@@ -26,6 +28,21 @@ fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageEr
         .map_err(|err| LanguageError::from_parse_error(err, &no_comments_src))?;
 
     p.close();
+
+    if p.conflicting_variables() {
+        return Err(LanguageError::ConflictingVariables);
+    }
+
+    for (expr, var) in p.iter_variable_expr_node() {
+        if p.iter_var_in_expr()
+            .find(|(var0, expr0)| {
+                p.are_equal_expr_node(*expr0, expr) && p.are_equal_var(*var0, var)
+            })
+            .is_none()
+        {
+            return Err(LanguageError::UndeclaredVariable);
+        }
+    }
 
     if p.conflicting_types() {
         return Err(LanguageError::ConflictingTypes);

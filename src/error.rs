@@ -6,6 +6,10 @@ use crate::grammar_util::NeverType;
 pub enum LanguageError {
     /// Line and column (both 0-based) of a parse error.
     ParseError { line: usize, column: usize },
+    /// A variable is declared more than once for the same scope.
+    ConflictingVariables,
+    /// A variable is used without prior declaration.
+    UndeclaredVariable,
     /// Some typing constraints conflict. E.g. a variable must both have type `string` and type
     /// `number`.
     ConflictingTypes,
@@ -55,6 +59,12 @@ impl fmt::Display for LanguageError {
                 let line_number = line + 1;
                 let column_number = column + 1;
                 write!(f, "Syntax error at {line_number}:{column_number}")?;
+            }
+            ConflictingVariables => {
+                write!(f, "Variable declared more than once")?;
+            }
+            UndeclaredVariable => {
+                write!(f, "Usage of undeclared variable")?;
             }
             ConflictingTypes => {
                 write!(f, "Conflicting type constraints")?;
