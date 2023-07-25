@@ -6,14 +6,6 @@ use crate::grammar_util::NeverType;
 pub enum LanguageError {
     /// Line and column (both 0-based) of a parse error.
     ParseError { line: usize, column: usize },
-    /// Some typing constraints conflict. E.g. a variable must both have type `string` and type
-    /// `number`.
-    ConflictingTypes,
-    /// The type of an expression is not determined, for example because an unused function
-    /// argument does not have an explicit type annotation.
-    // TODO: Temporarily allowed to be unused until we enable checking for undetermined types.
-    #[allow(unused)]
-    UndeterminedType,
     /// A variable is declared more than once for the same scope.
     ConflictingVariables,
     /// A variable is used without prior declaration.
@@ -59,12 +51,6 @@ impl fmt::Display for LanguageError {
                 let line_number = line + 1;
                 let column_number = column + 1;
                 write!(f, "Syntax error at {line_number}:{column_number}")?;
-            }
-            ConflictingTypes => {
-                write!(f, "Conflicting type constraints")?;
-            }
-            UndeterminedType => {
-                write!(f, "Undetermined type")?;
             }
             ConflictingVariables => {
                 write!(f, "Variable declared more than once")?;
