@@ -1,17 +1,17 @@
-Pred ConflictingTypes: ();
 Pred ConflictingVariables: ();
+Pred ConflictingTypes: ();
 
 // # The AST, encoded algebraically/relationally.
 Sort ModuleNode;
 
 Sort TypeNode;
-Sort TypeNodeOpt;
+Sort OptTypeNode;
 
 Sort ExprNode;
-Sort ExprNodeList;
+Sort ExprListNode;
 
 Sort StmtNode;
-Sort StmtNodeList;
+Sort StmtListNode;
 
 Sort FunctionNode;
 
@@ -19,17 +19,17 @@ Sort Var;
 Sort StringLiteral;
 Sort NumberLiteral;
 
-Sort ArgList;
+Sort ArgListNode;
 
 // Module(node, top_lvl_stmts)
-Pred Module : ModuleNode * StmtNodeList;
+Pred Module : ModuleNode * StmtListNode;
 
 Pred VoidTypeNode : TypeNode;
 Pred BooleanTypeNode : TypeNode;
 Pred NumberTypeNode : TypeNode;
 Pred StringTypeNode : TypeNode;
 // FunctionTypeNode(node, domain, codomain)
-Pred FunctionTypeNode : TypeNode * ArgList * TypeNode;
+Pred FunctionTypeNode : TypeNode * ArgListNode * TypeNode;
 
 Pred VariableExprNode : ExprNode * Var;
 Pred VoidExprNode : ExprNode;
@@ -37,39 +37,40 @@ Pred FalseExprNode : ExprNode;
 Pred TrueExprNode : ExprNode;
 Pred StringLiteralExprNode : ExprNode * StringLiteral;
 Pred NumberLiteralExprNode : ExprNode * NumberLiteral;
+Pred EqualsExprNode : ExprNode * ExprNode * ExprNode;
 // AppExprNode(node, func, args)
-Pred AppExprNode : ExprNode * ExprNode * ExprNodeList;
+Pred AppExprNode : ExprNode * ExprNode * ExprListNode;
 Pred FunctionExprNode : ExprNode * FunctionNode;
 
 Pred ExprStmtNode : StmtNode * ExprNode;
 // LetStmtNode(node, var, initial_value)
-Pred LetStmtNode : StmtNode * Var * TypeNodeOpt * ExprNode;
+Pred LetStmtNode : StmtNode * Var * OptTypeNode * ExprNode;
 // ReturnStmtNode(node, return_value)
 Pred ReturnStmtNode : StmtNode * ExprNode;
 Pred ReturnVoidStmtNode : StmtNode;
 Pred FunctionStmtNode : StmtNode * FunctionNode;
 // IfStmtNode(node, condition, true_branch, false_branch)
-Pred IfStmtNode : StmtNode * ExprNode * StmtNodeList * StmtNodeList;
+Pred IfStmtNode : StmtNode * ExprNode * StmtListNode * StmtListNode;
 // WhileStmtNode(node, condition, body)
-Pred WhileStmtNode : StmtNode * ExprNode * StmtNodeList;
+Pred WhileStmtNode : StmtNode * ExprNode * StmtListNode;
 
 // Function(node, function_name, domain, codomain, body)
-Pred Function : FunctionNode * Var * ArgList * TypeNodeOpt * StmtNodeList;
+Pred Function : FunctionNode * Var * ArgListNode * OptTypeNode * StmtListNode;
 
 // ## <Sort>NodeList operators.
-Pred NilExprNodeList : ExprNodeList;
-Pred ConsExprNodeList : ExprNodeList * ExprNode * ExprNodeList;
+Pred NilExprListNode : ExprListNode;
+Pred ConsExprListNode : ExprListNode * ExprNode * ExprListNode;
 
-Pred NilStmtNodeList : StmtNodeList;
-Pred ConsStmtNodeList : StmtNodeList * StmtNode * StmtNodeList;
+Pred NilStmtListNode : StmtListNode;
+Pred ConsStmtListNode : StmtListNode * StmtNode * StmtListNode;
 
-// ## ArgList operators.
-Pred NilArgList : ArgList;
-Pred ConsArgList : ArgList * Var * TypeNodeOpt * ArgList;
+// ## ArgListNode operators.
+Pred NilArgListNode : ArgListNode;
+Pred ConsArgListNode : ArgListNode * Var * OptTypeNode * ArgListNode;
 
-// ## TypeNodeOpt operators.
-Pred NoneTypeNodeOpt : TypeNodeOpt;
-Pred SomeTypeNodeOpt : TypeNodeOpt * TypeNode;
+// ## OptTypeNode operators.
+Pred NoneOptTypeNode : OptTypeNode;
+Pred SomeOptTypeNode : OptTypeNode * TypeNode;
 
 
 // # Semantic types.
@@ -129,12 +130,12 @@ Axiom
 
 // ## Functions assigning to node elements their corresponding semantic Type elements.
 Func SemanticType : TypeNode -> Type;
-Func SemanticTypeOpt : TypeNodeOpt -> Type;
-Func SemanticArgTypes : ArgList -> TypeList;
+Func SemanticOptType : OptTypeNode -> Type;
+Func SemanticArgTypes : ArgListNode -> TypeList;
 
 Axiom tn: TypeNode => SemanticType(tn)!;
-Axiom tno: TypeNodeOpt => SemanticTypeOpt(tno)!;
-Axiom ag: ArgList => SemanticArgTypes(ag)!;
+Axiom otn: OptTypeNode => SemanticOptType(otn)!;
+Axiom ag: ArgListNode => SemanticArgTypes(ag)!;
 
 // Since another axiom enforces that SemanticType is total, these rules will fire for all
 // TypeNodes.
@@ -146,30 +147,31 @@ Axiom StringTypeNode(tn) => StringType() ~> SemanticType(tn);
 // will fire for al FunctionTypeNodes.
 Axiom
     FunctionTypeNode(tn, args, codomain)
+    & dom_types = SemanticArgTypes(args)
+    & cod_type = SemanticType(codomain)
+	  & function_type = SemanticType(tn)
     =>
-    FunctionType(SemanticArgTypes(args), SemanticType(codomain))
-    ~>
-    SemanticType(tn)
+    FunctionType(dom_types, cod_type) = function_type
     ;
 
-// SemanticTypeOpt is total, but only for SomeTypeNodeOpt elements does it have a determined type.
-// If no other rules apply, it will be an opaque Type element determined only by the TypeNodeOpt
+// SemanticOptType is total, but only for SomeOptTypeNode elements does it have a determined type.
+// If no other rules apply, it will be an opaque Type element determined only by the OptTypeNode
 // element.
 Axiom
-	  SomeTypeNodeOpt(tno, tn)
+    SomeOptTypeNode(otn, tn)
+    & sigma = SemanticType(tn)
     =>
-    SemanticType(tn)
-    ~>
-		SemanticTypeOpt(tno)
-		;
+    SemanticOptType(otn) = sigma
+    ;
 
-Axiom NilArgList(al) => NilTypeList() ~> SemanticArgTypes(al);
+Axiom NilArgListNode(al) => NilTypeList() ~> SemanticArgTypes(al);
 Axiom
-    ConsArgList(al, _, head_type, tail)
+    ConsArgListNode(al, _, head_type, tail)
+    & semantic_head = SemanticOptType(head_type)
+    & semantic_tail = SemanticArgTypes(tail)
+    & sat = SemanticArgTypes(al)
     =>
-    ConsTypeList(SemanticTypeOpt(head_type), SemanticArgTypes(tail))
-    ~>
-    SemanticArgTypes(al)
+    sat = ConsTypeList(semantic_head, semantic_tail)
     ;
 
 // ## Determined types, i.e. those that do not contain unsolved type variables.
@@ -236,14 +238,14 @@ Axiom
     ;
 
 Axiom
-    ConsArgList(_, _, tno, _)
-    & t = SemanticTypeOpt(tno)
+    ConsArgListNode(_, _, otn, _)
+    & t = SemanticOptType(otn)
     =>
     DeterminedType(t)
     ;
 Axiom
-    Function(_, _, _, codomain_tno, _)
-    & t = SemanticTypeOpt(codomain_tno)
+    Function(_, _, _, codomain_otn, _)
+    & t = SemanticOptType(codomain_otn)
     =>
     DeterminedType(t)
     ;
@@ -356,26 +358,26 @@ Axiom
 // ## The type contexts associated with expressions and statements.
 Func ModuleTypeContext : ModuleNode -> TypeContext;
 Func FunctionTypeContext : FunctionNode -> TypeContext;
-Func ArgListContext: ArgList -> TypeContext;
+Func ArgListContext: ArgListNode -> TypeContext;
 Func StmtTypeContext : StmtNode -> TypeContext;
-Func StmtsTypeContext : StmtNodeList -> TypeContext;
+Func StmtsTypeContext : StmtListNode -> TypeContext;
 Func ExprTypeContext : ExprNode -> TypeContext;
-Func ExprsTypeContext : ExprNodeList -> TypeContext;
+Func ExprsTypeContext : ExprListNode -> TypeContext;
 
 Axiom mn : ModuleNode => ModuleTypeContext(mn)!;
 Axiom fn : FunctionNode => FunctionTypeContext(fn)!;
-Axiom args : ArgList => ArgListContext(args)!;
+Axiom args : ArgListNode => ArgListContext(args)!;
 Axiom stmt : StmtNode => StmtTypeContext(stmt)!;
-Axiom stmts : StmtNodeList => StmtsTypeContext(stmts)!;
+Axiom stmts : StmtListNode => StmtsTypeContext(stmts)!;
 Axiom expr : ExprNode => ExprTypeContext(expr)!;
-Axiom exprs : ExprNodeList => ExprsTypeContext(exprs)!;
+Axiom exprs : ExprListNode => ExprsTypeContext(exprs)!;
 
 // ## Populating the TypeInContext predicate.
 
 // Forward declarations.
 Func ExprType : ExprNode -> Type;
 Sort GeneralType;
-Func VarTypeInArgList : Var * ArgList -> GeneralType;
+Func VarTypeInArgList : Var * ArgListNode -> GeneralType;
 Func MonoType : Type -> GeneralType;
 
 // The type of an expression is in the type context of that expression.
@@ -388,7 +390,7 @@ Axiom
 
 // The type of a function argument is in the context of the arg list of the function.
 Axiom
-    ConsArgList(arg_list, head_var, _, tail)
+    ConsArgListNode(arg_list, head_var, _, tail)
     // The type of a variable is only in recorded after the variable has been introduced.
     & MonoType(sigma) = VarTypeInArgList(head_var, tail)
     & ctx = ArgListContext(arg_list)
@@ -398,20 +400,20 @@ Axiom
 
 // Relate type contexts of node lists with the type contexts of individual nodes in the lists.
 Axiom
-		ConsArgList(al, _, _, tail)
+		ConsArgListNode(al, _, _, tail)
     & ArgListContext(al) = ctx
     =>
     & ArgListContext(tail) = ctx
     ;
 Axiom
-		ConsStmtNodeList(stmts, head, tail)
+		ConsStmtListNode(stmts, head, tail)
     & StmtsTypeContext(stmts) = ctx
     =>
     StmtTypeContext(head) = ctx
     & StmtsTypeContext(tail) = ctx
     ;
 Axiom
-		ConsExprNodeList(stmts, head, tail)
+		ConsExprListNode(stmts, head, tail)
     & ExprsTypeContext(stmts) = ctx
     =>
     ExprTypeContext(head) = ctx
@@ -546,34 +548,35 @@ Axiom
     ;
 
 
+
 // # Variable resolution.
-//
-// For each node kind X in which variables matter, we introduce a partial function
+
+// For each node kind X in which variables matter, we introduce a function
 //
 //   VarTypeInX : Var * X -> Type
 //
-// and add axioms such that VarTypeInX(var, n) = sigma iff var is considered to be in scope for
-// node n. sigma can be an opaque Type element. That var must be in scope for n means that var must
-// have been introduced *before* n; it is not sufficient for n to introduce the variable.
+// and add axioms such that VarTypeInX(var, n) = sigma holds iff var is considered to be in scope
+// for node n and has type sigma. That var must be in scope for n means that var must have been
+// introduced *before* n; it is not sufficient for n to introduce the variable.
 //
-// For X = StmtNodeList and X = ArgList, note that if n = ConsX(head, tail), then head appears
-// before tail in source code. For example, if body is the StmtNodeList representing the body of a
+// For X = StmtListNode and X = ArgListNode, note that if n = ConsX(head, tail), then head appears
+// before tail in source code. For example, if body is the StmtListNode representing the body of a
 // function, then none of the variables introduced in the body will be in scope for body. Instead,
-// all of those variables are in scope at the NilStmtNodeList of body. Similarly, if args is the
-// ArgList of a function definition, then the variables listed in args are only in scope for the
-// NilArgList at the root of args.
+// all of those variables are in scope at the NilStmtListNode of body. Similarly, if args is the
+// ArgListNode of a function definition, then the variables listed in args are only in scope for the
+// NilArgListNode at the root of args.
 
 Func PolyType : TypeContext * Type -> GeneralType;
 // Declared earlier:
 // Func MonoType : Type -> GeneralType;
 Axiom sigma : Type => MonoType(sigma)!;
 
-Func VarTypeInStmts : Var * StmtNodeList -> GeneralType;
+Func VarTypeInStmts : Var * StmtListNode -> GeneralType;
 Func VarTypeInFunction : Var * FunctionNode -> GeneralType;
 // Declared earlier:
-// Func VarTypeInArgList : Var * ArgList -> GeneralType;
+// Func VarTypeInArgList : Var * ArgListNode -> GeneralType;
 Func VarTypeInExpr : Var * ExprNode -> GeneralType;
-Func VarTypeInExprs : Var * ExprNodeList -> GeneralType;
+Func VarTypeInExprs : Var * ExprListNode -> GeneralType;
 
 // Forward declarations of the function assigning semantic types to function literals.
 Func FunctionNodeType : FunctionNode -> Type;
@@ -582,19 +585,19 @@ Func FunctionNodeType : FunctionNode -> Type;
 
 // Every let statements introduces a variable.
 Axiom
-    ConsStmtNodeList(_, head, tail)
-    & LetStmtNode(head, var, tno, expr)
+    ConsStmtListNode(_, head, tail)
+    & LetStmtNode(head, var, otn, expr)
     & expr_type = ExprType(expr)
     & mono_expr_type = MonoType(expr_type)
     =>
-    expr_type = SemanticTypeOpt(tno)
+    expr_type = SemanticOptType(otn)
     & VarTypeInStmts(var, tail) = mono_expr_type
     ;
 
 // Every function statement introduces a variable for statements occuring after the function
 // statement.
 Axiom
-    ConsStmtNodeList(_, head, _)
+    ConsStmtListNode(_, head, _)
     & FunctionStmtNode(head, func)
     & ctx = StmtTypeContext(head)
     & Function(func, _, _, _ ,_)
@@ -602,7 +605,7 @@ Axiom
     PolyType(ctx, FunctionNodeType(func))!
     ;
 Axiom
-    ConsStmtNodeList(_, head, tail)
+    ConsStmtListNode(_, head, tail)
     & FunctionStmtNode(head, func)
     & ctx = StmtTypeContext(head)
     & Function(func, var, _, _ ,_)
@@ -612,23 +615,21 @@ Axiom
     PolyType(ctx, FunctionNodeType(func))
     ;
 
-// Every function node introduces the name of the function in the ArgList of the function (and
+// Every function node introduces the name of the function in the ArgListNode of the function (and
 // hence, by the propagation axioms below, also in the body of the function).
 Axiom
     Function(func, var, arg, _ ,_)
+    & sigma = MonoType(FunctionNodeType(func))
     =>
-    VarTypeInArgList(var, arg)
-    ~>
-    MonoType(FunctionNodeType(func))
+    VarTypeInArgList(var, arg) = sigma
     ;
 
 // Every function argument introduces a variable.
 Axiom
-    ConsArgList(_, var, tno, tail)
+    ConsArgListNode(_, var, otn, tail)
+    & sigma = MonoType(SemanticOptType(otn))
     =>
-    VarTypeInArgList(var, tail)
-    ~>
-    MonoType(SemanticTypeOpt(tno))
+    VarTypeInArgList(var, tail) = sigma
     ;
 
 // ## Errors due to multiple introductions of the same variable
@@ -636,31 +637,55 @@ Axiom
 // For each base node case that introduces a variable, it is an error if the variable is already in
 // scope before the node.
 
-Axiom LetStmtNode(head, var, _, _) & VarTypeInStmts(var, stmts)! & ConsStmtNodeList(stmts, head, _) => ConflictingVariables();
+Axiom
+    ConsStmtListNode(stmts, head, _)
+    & LetStmtNode(head, var, _, _)
+    & VarTypeInStmts(var, stmts)!
+    =>
+    ConflictingVariables();
 Axiom
     FunctionStmtNode(head, func)
     & Function(func, var, _, _ ,_)
     & VarTypeInStmts(var, stmts)!
-		& ConsStmtNodeList(stmts, head, _)
+    & ConsStmtListNode(stmts, head, _)
     =>
     ConflictingVariables()
     ;
-Axiom Function(func, var, _, _, _) & VarTypeInFunction(var, func)! => ConflictingVariables();
-Axiom VarTypeInArgList(var, al)! & ConsArgList(al, var, _, _) => ConflictingVariables();
+Axiom
+    Function(func, var, _, _, _)
+    & VarTypeInFunction(var, func)!
+    =>
+    ConflictingVariables()
+    ;
+Axiom
+    ConsArgListNode(al, var, _, _)
+    & VarTypeInArgList(var, al)!
+    =>
+    ConflictingVariables()
+    ;
 
 // ## Propagation of variables through lists
 //
 // If a variable is in scope for ConsX(head, tail), then it should also be in scope for tail.
 
-Axiom ConsStmtNodeList(stmts, _, tail) => VarTypeInStmts(var, tail) ~> VarTypeInStmts(var, stmts);
-Axiom ConsArgList(al, _, _, tail) => VarTypeInArgList(var, tail) ~> VarTypeInArgList(var, al);
 Axiom
-	VarTypeInExprs(var, exprs) = sigma &
-	ConsExprNodeList(exprs, head, tail)
-	=>
-	VarTypeInExpr(var, head) = sigma
-  & VarTypeInExprs(var, tail) = sigma
-  ;
+    ConsStmtListNode(stmts, _, tail)
+    & sigma = VarTypeInStmts(var, stmts)
+    =>
+    VarTypeInStmts(var, tail) = sigma
+    ;
+Axiom
+    ConsArgListNode(al, _, _, tail)
+    & sigma = VarTypeInArgList(var, al)
+    =>
+    VarTypeInArgList(var, tail) = sigma;
+Axiom
+    ConsExprListNode(exprs, head, tail)
+    & sigma = VarTypeInExprs(var, exprs)
+    =>
+    VarTypeInExpr(var, head) = sigma
+    & VarTypeInExprs(var, tail) = sigma
+    ;
 
 // ## Propagating variables through nodes
 //
@@ -680,49 +705,46 @@ Axiom
 // Propagate ambient variables into arg lists.
 Axiom
     Function(func, _, args, _, _)
+    & sigma = VarTypeInFunction(var, func)
     =>
-    VarTypeInArgList(var, args)
-    ~>
-    VarTypeInFunction(var, func)
+    VarTypeInArgList(var, args) = sigma
     ;
 
 // By the "root" of a node list l we mean the unique nil node from which l can be obtained by
-// repeated consing. We need access to the root of an ArgList so that we know the full set of
+// repeated consing. We need access to the root of an ArgListNode so that we know the full set of
 // variables introduced in that arg list.
 
-// The axioms are such that RootNilArgList is total if every arg list is Nil or Cons (and not
+// The axioms are such that RootNilArgListNode is total if every arg list is Nil or Cons (and not
 // opaque).
-Func RootNilArgList : ArgList -> ArgList;
-Axiom NilArgList(args) => RootNilArgList(args) = args;
-Axiom ConsArgList(al, _, _, tail) => RootNilArgList(al) ~> RootNilArgList(tail);
+Func RootNilArgListNode : ArgListNode -> ArgListNode;
+Axiom NilArgListNode(args) => RootNilArgListNode(args) = args;
+Axiom ConsArgListNode(al, _, _, tail) => RootNilArgListNode(al) ~> RootNilArgListNode(tail);
 
 // Propagate variables from the arg list into the body.
 Axiom
     Function(_, _, args, _, body)
+    & sigma = VarTypeInArgList(var, RootNilArgListNode(args))
     =>
-    VarTypeInStmts(var, body)
-    ~>
-    VarTypeInArgList(var, RootNilArgList(args))
+    VarTypeInStmts(var, body) = sigma
     ;
 
 // ### Propagating variables through statements
 
 // If a variable is in scope in the statement that defines a function, then the variable is also in
-// scope of the ArgList of that function (which then means that it is in scope for the body).
+// scope of the ArgListNode of that function (which then means that it is in scope for the body).
 Axiom
-    ConsStmtNodeList(stmts, head, _)
+    ConsStmtListNode(stmts, head, _)
     & FunctionStmtNode(head, func)
+    & sigma = VarTypeInStmts(var, stmts)
     =>
-    VarTypeInFunction(var, func)
-    ~>
-    VarTypeInStmts(var, stmts)
+    VarTypeInFunction(var, func) = sigma
     ;
 
 // Propagate variables through if statements.
 Axiom
-    ConsStmtNodeList(stmts, head, _)
+    ConsStmtListNode(stmts, head, _)
     & IfStmtNode(head, cond, true_branch, false_branch)
-    & VarTypeInStmts(var, stmts) = sigma
+    & sigma = VarTypeInStmts(var, stmts)
     =>
     VarTypeInExpr(var, cond) = sigma
     & VarTypeInStmts(var, true_branch) = sigma
@@ -731,7 +753,7 @@ Axiom
 
 // Propagate variables through while statements.
 Axiom
-    ConsStmtNodeList(stmts, head, _)
+    ConsStmtListNode(stmts, head, _)
     & WhileStmtNode(head, cond, body)
     & sigma = VarTypeInStmts(var, stmts)
     =>
@@ -741,40 +763,46 @@ Axiom
 
 // Propagate variables through expression statements.
 Axiom
-    ConsStmtNodeList(stmts, head, _)
+    ConsStmtListNode(stmts, head, _)
     & ExprStmtNode(head, expr)
+    & sigma = VarTypeInStmts(var, stmts)
     =>
-    VarTypeInExpr(var, expr)
-    ~>
-    VarTypeInStmts(var, stmts)
+    VarTypeInExpr(var, expr) = sigma
     ;
 
 // Propagate previously defined variables through let statements into initializer expressions.
 Axiom
-    ConsStmtNodeList(stmts, head, _)
+    ConsStmtListNode(stmts, head, _)
     & LetStmtNode(head, _, _, expr)
+    & sigma = VarTypeInStmts(var, stmts)
     =>
-    VarTypeInExpr(var, expr)
-    ~>
-    VarTypeInStmts(var, stmts)
+    VarTypeInExpr(var, expr) = sigma
     ;
 
 // Propagate variables through return statements.
 Axiom
-    ConsStmtNodeList(stmts, head, _)
+    ConsStmtListNode(stmts, head, _)
     & ReturnStmtNode(head, expr)
+    & sigma = VarTypeInStmts(var, stmts)
     =>
-    VarTypeInExpr(var, expr)
-    ~>
-    VarTypeInStmts(var, stmts)
+    VarTypeInExpr(var, expr) = sigma
     ;
 
 // ### Propagating variables through expressions
 
+// Propagate variables through equality expressions.
+Axiom
+    EqualsExprNode(expr, lhs, rhs)
+    & sigma = VarTypeInExpr(var, expr)
+    =>
+    VarTypeInExpr(var, lhs) = sigma
+    & VarTypeInExpr(var, rhs) = sigma
+    ;
+
 // Propagate variables through function application expressions.
 Axiom
     AppExprNode(expr, func, args)
-    & VarTypeInExpr(var, expr) = sigma
+    & sigma = VarTypeInExpr(var, expr)
     =>
     VarTypeInExpr(var, func) = sigma
     & VarTypeInExprs(var, args) = sigma
@@ -783,16 +811,15 @@ Axiom
 // Propagate variables through function expression.
 Axiom
     FunctionExprNode(expr, func)
+    & sigma = VarTypeInExpr(var, expr)
     =>
-    VarTypeInFunction(var, func)
-    ~>
-    VarTypeInExpr(var, expr)
+    VarTypeInFunction(var, func) = sigma
     ;
 
 // # Expression typing.
 // Declared earlier:
 // Func ExprType : ExprNode -> Type;
-Func ExprTypes : ExprNodeList -> TypeList;
+Func ExprTypes : ExprListNode -> TypeList;
 
 // The substitutions associated to expressions with PolyTypes that must be instantiated into
 // MonoTypes.
@@ -801,11 +828,11 @@ Func ExprSubstitution : ExprNode -> Substitution;
 // Both ExprType and ExprTypes are total. Our axioms enforce that ExprTypes is given by mapping
 // ExprType on each ExprNode element.
 Axiom expr: ExprNode => ExprType(expr)!;
-Axiom exprs: ExprNodeList => ExprTypes(exprs)!;
+Axiom exprs: ExprListNode => ExprTypes(exprs)!;
 
-Axiom NilExprNodeList(exprs) => NilTypeList() ~> ExprTypes(exprs);
+Axiom NilExprListNode(exprs) => NilTypeList() ~> ExprTypes(exprs);
 Axiom
-    ConsExprNodeList(exprs, head, tail)
+    ConsExprListNode(exprs, head, tail)
     =>
     ConsTypeList(ExprType(head), ExprTypes(tail))
     ~>
@@ -845,6 +872,17 @@ Axiom FalseExprNode(expr) => BooleanType() ~> ExprType(expr);
 Axiom TrueExprNode(expr) => BooleanType() ~> ExprType(expr);
 Axiom StringLiteralExprNode(expr, _) => StringType() ~> ExprType(expr);
 Axiom NumberLiteralExprNode(expr, _) => NumberType() ~> ExprType(expr);
+
+Axiom
+	  EqualsExprNode(eq, lhs, rhs)
+    & eq_type = ExprType(eq)
+	  & lhs_type = ExprType(lhs)
+    & rhs_type = ExprType(rhs)
+    =>
+    eq_type = BooleanType()
+    & lhs_type = rhs_type
+    ;
+  
 
 // The conclusions of these axioms assert that DomainTypes or CodomainType are defined on some
 // types tau. By the axioms relating these functions to FunctionType, this means that such types
@@ -894,11 +932,11 @@ Axiom
 // CanProceedStmt(stmt) is true if execution can flow past this statement. CanProceedStmts(stmts)
 // is true if CanProceed holds for all statements in stmts.
 Pred CanProceedStmt : StmtNode;
-Pred CanProceedStmts : StmtNodeList;
+Pred CanProceedStmts : StmtListNode;
 
-Axiom NilStmtNodeList(stmts) => CanProceedStmts(stmts);
+Axiom NilStmtListNode(stmts) => CanProceedStmts(stmts);
 Axiom
-    ConsStmtNodeList(stmts, head, tail)
+    ConsStmtListNode(stmts, head, tail)
     & CanProceedStmt(head)
     & CanProceedStmts(tail)
     =>
@@ -921,21 +959,21 @@ Axiom WhileStmtNode(stmt, _, _) => CanProceedStmt(stmt);
 // about explicit returns, not the possible implicit `return ();` at the end of a function.
 // However, every list of statements can at most return expressions of a single type, so we can
 // model `ReturnsType` as a partial function.
-Func ReturnsType : StmtNodeList -> Type;
+Func ReturnsType : StmtListNode -> Type;
 
 // If there is any suffix of a statement list that can return a given type, then the full list can
 // return that type.
-Axiom ConsStmtNodeList(stmts, _, tail) => ReturnsType(stmts) ~> ReturnsType(tail);
+Axiom ConsStmtListNode(stmts, _, tail) => ReturnsType(stmts) ~> ReturnsType(tail);
 
 // Base cases for return statements with and without (i.e. void) expressions.
 Axiom
-    ConsStmtNodeList(stmts, head, _)
+    ConsStmtListNode(stmts, head, _)
     & ReturnStmtNode(head, return_value)
     =>
     ReturnsType(stmts) ~> ExprType(return_value)
     ;
 Axiom
-    ConsStmtNodeList(stmts, head, _)
+    ConsStmtListNode(stmts, head, _)
     & ReturnVoidStmtNode(head)
     =>
     VoidType()!
@@ -943,13 +981,13 @@ Axiom
 
 // An if statement can return a type if at least one of its two branches returns that type.
 Axiom
-    ConsStmtNodeList(stmts, head, _)
+    ConsStmtListNode(stmts, head, _)
     & IfStmtNode(head, _, true_branch, _)
     =>
     ReturnsType(stmts) ~> ReturnsType(true_branch)
     ;
 Axiom
-    ConsStmtNodeList(stmts, head, _)
+    ConsStmtListNode(stmts, head, _)
     & IfStmtNode(head, _, _, false_branch)
     =>
     ReturnsType(stmts) ~> ReturnsType(false_branch)
@@ -957,7 +995,7 @@ Axiom
 
 // A while statement can return a type if its body can return that type.
 Axiom
-    ConsStmtNodeList(stmts, head, _)
+    ConsStmtListNode(stmts, head, _)
     & WhileStmtNode(head, _, body)
     =>
     ReturnsType(stmts) ~> ReturnsType(body)
@@ -978,7 +1016,7 @@ Axiom
     ;
 
 // Typing constraints due to the types of function variables. Note that the types of argument
-// variables as given by VarInArgList were previously unified with the optional type annotation (an
+// variables as given by VarInArgListNode were previously unified with the optional type annotation (an
 // opaque Type element if no annotation was given), which in turn were unified with the types
 // appearing in SemanticArgTypes.
 Axiom
@@ -993,7 +1031,7 @@ Axiom
 Axiom
     Function(func, _, _, codomain, _)
     =>
-    SemanticTypeOpt(codomain) ~> CodomainType(FunctionNodeType(func))
+    SemanticOptType(codomain) ~> CodomainType(FunctionNodeType(func))
     ;
 
 // Typing constraints due to explicit return statements.

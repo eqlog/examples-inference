@@ -117,6 +117,25 @@ fn while_cond() {
 }
 
 #[test]
+fn equals_expr_type() {
+    let (p, lits, _) = check_source(&indoc! {"
+        let a = 5 == 5;
+    "})
+    .unwrap();
+    let boolean_type = p.boolean_type().unwrap();
+    assert!(var_has_type("a", boolean_type, &p, &lits));
+}
+
+#[test]
+fn bad_equals_arg_types() {
+    let err = check_source(&indoc! {"
+        let a = 5 == 'xyz';
+    "})
+    .unwrap_err();
+    assert_eq!(&err.to_string(), "Conflicting type constraints");
+}
+
+#[test]
 fn app_dom_cod_to_func() {
     let (p, lits, _) = check_source(&indoc! {"
         function xyz (a) {
@@ -203,6 +222,18 @@ fn bad_non_well_founded_type() {
     let err = check_source(&indoc! {"
         function foo (x) {
             x(x);
+        }
+    "})
+    .unwrap_err();
+    assert_eq!(&err.to_string(), "Conflicting type constraints");
+}
+
+#[test]
+fn bad_type_usage_function() {
+    let err = check_source(&indoc! {"
+        let x: number = 5;
+        function foo() {
+            let y: string = x;
         }
     "})
     .unwrap_err();
