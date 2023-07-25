@@ -1,5 +1,5 @@
-Pred ConflictingTypes: ();
 Pred ConflictingVariables: ();
+Pred ConflictingTypes: ();
 
 // # The AST, encoded algebraically/relationally.
 Sort ModuleNode;
@@ -147,30 +147,31 @@ Axiom StringTypeNode(tn) => StringType() ~> SemanticType(tn);
 // will fire for al FunctionTypeNodes.
 Axiom
     FunctionTypeNode(tn, args, codomain)
+    & dom_types = SemanticArgTypes(args)
+    & cod_type = SemanticType(codomain)
+	  & function_type = SemanticType(tn)
     =>
-    FunctionType(SemanticArgTypes(args), SemanticType(codomain))
-    ~>
-    SemanticType(tn)
+    FunctionType(dom_types, cod_type) = function_type
     ;
 
 // SemanticOptType is total, but only for SomeOptTypeNode elements does it have a determined type.
 // If no other rules apply, it will be an opaque Type element determined only by the OptTypeNode
 // element.
 Axiom
-	  SomeOptTypeNode(otn, tn)
+    SomeOptTypeNode(otn, tn)
+    & sigma = SemanticType(tn)
     =>
-    SemanticType(tn)
-    ~>
-		SemanticOptType(otn)
-		;
+    SemanticOptType(otn) = sigma
+    ;
 
 Axiom NilArgListNode(al) => NilTypeList() ~> SemanticArgTypes(al);
 Axiom
     ConsArgListNode(al, _, head_type, tail)
+    & semantic_head = SemanticOptType(head_type)
+    & semantic_tail = SemanticArgTypes(tail)
+    & sat = SemanticArgTypes(al)
     =>
-    ConsTypeList(SemanticOptType(head_type), SemanticArgTypes(tail))
-    ~>
-    SemanticArgTypes(al)
+    sat = ConsTypeList(semantic_head, semantic_tail)
     ;
 
 // ## Determined types, i.e. those that do not contain unsolved type variables.
@@ -376,7 +377,7 @@ Axiom exprs : ExprListNode => ExprsTypeContext(exprs)!;
 // Forward declarations.
 Func ExprType : ExprNode -> Type;
 Sort GeneralType;
-Func VarTypeInArgListNode : Var * ArgListNode -> GeneralType;
+Func VarTypeInArgList : Var * ArgListNode -> GeneralType;
 Func MonoType : Type -> GeneralType;
 
 // The type of an expression is in the type context of that expression.
@@ -391,7 +392,7 @@ Axiom
 Axiom
     ConsArgListNode(arg_list, head_var, _, tail)
     // The type of a variable is only in recorded after the variable has been introduced.
-    & MonoType(sigma) = VarTypeInArgListNode(head_var, tail)
+    & MonoType(sigma) = VarTypeInArgList(head_var, tail)
     & ctx = ArgListContext(arg_list)
     =>
     TypeInContext(sigma, ctx)
@@ -547,15 +548,16 @@ Axiom
     ;
 
 
+
 // # Variable resolution.
-//
-// For each node kind X in which variables matter, we introduce a partial function
+
+// For each node kind X in which variables matter, we introduce a function
 //
 //   VarTypeInX : Var * X -> Type
 //
-// and add axioms such that VarTypeInX(var, n) = sigma iff var is considered to be in scope for
-// node n. sigma can be an opaque Type element. That var must be in scope for n means that var must
-// have been introduced *before* n; it is not sufficient for n to introduce the variable.
+// and add axioms such that VarTypeInX(var, n) = sigma holds iff var is considered to be in scope
+// for node n and has type sigma. That var must be in scope for n means that var must have been
+// introduced *before* n; it is not sufficient for n to introduce the variable.
 //
 // For X = StmtListNode and X = ArgListNode, note that if n = ConsX(head, tail), then head appears
 // before tail in source code. For example, if body is the StmtListNode representing the body of a
@@ -572,7 +574,7 @@ Axiom sigma : Type => MonoType(sigma)!;
 Func VarTypeInStmts : Var * StmtListNode -> GeneralType;
 Func VarTypeInFunction : Var * FunctionNode -> GeneralType;
 // Declared earlier:
-// Func VarTypeInArgListNode : Var * ArgListNode -> GeneralType;
+// Func VarTypeInArgList : Var * ArgListNode -> GeneralType;
 Func VarTypeInExpr : Var * ExprNode -> GeneralType;
 Func VarTypeInExprs : Var * ExprListNode -> GeneralType;
 
@@ -617,19 +619,17 @@ Axiom
 // hence, by the propagation axioms below, also in the body of the function).
 Axiom
     Function(func, var, arg, _ ,_)
+    & sigma = MonoType(FunctionNodeType(func))
     =>
-    VarTypeInArgListNode(var, arg)
-    ~>
-    MonoType(FunctionNodeType(func))
+    VarTypeInArgList(var, arg) = sigma
     ;
 
 // Every function argument introduces a variable.
 Axiom
     ConsArgListNode(_, var, otn, tail)
+    & sigma = MonoType(SemanticOptType(otn))
     =>
-    VarTypeInArgListNode(var, tail)
-    ~>
-    MonoType(SemanticOptType(otn))
+    VarTypeInArgList(var, tail) = sigma
     ;
 
 // ## Errors due to multiple introductions of the same variable
@@ -637,31 +637,55 @@ Axiom
 // For each base node case that introduces a variable, it is an error if the variable is already in
 // scope before the node.
 
-Axiom LetStmtNode(head, var, _, _) & VarTypeInStmts(var, stmts)! & ConsStmtListNode(stmts, head, _) => ConflictingVariables();
+Axiom
+    ConsStmtListNode(stmts, head, _)
+    & LetStmtNode(head, var, _, _)
+    & VarTypeInStmts(var, stmts)!
+    =>
+    ConflictingVariables();
 Axiom
     FunctionStmtNode(head, func)
     & Function(func, var, _, _ ,_)
     & VarTypeInStmts(var, stmts)!
-		& ConsStmtListNode(stmts, head, _)
+    & ConsStmtListNode(stmts, head, _)
     =>
     ConflictingVariables()
     ;
-Axiom Function(func, var, _, _, _) & VarTypeInFunction(var, func)! => ConflictingVariables();
-Axiom VarTypeInArgListNode(var, al)! & ConsArgListNode(al, var, _, _) => ConflictingVariables();
+Axiom
+    Function(func, var, _, _, _)
+    & VarTypeInFunction(var, func)!
+    =>
+    ConflictingVariables()
+    ;
+Axiom
+    ConsArgListNode(al, var, _, _)
+    & VarTypeInArgList(var, al)!
+    =>
+    ConflictingVariables()
+    ;
 
 // ## Propagation of variables through lists
 //
 // If a variable is in scope for ConsX(head, tail), then it should also be in scope for tail.
 
-Axiom ConsStmtListNode(stmts, _, tail) => VarTypeInStmts(var, tail) ~> VarTypeInStmts(var, stmts);
-Axiom ConsArgListNode(al, _, _, tail) => VarTypeInArgListNode(var, tail) ~> VarTypeInArgListNode(var, al);
 Axiom
-	VarTypeInExprs(var, exprs) = sigma &
-	ConsExprListNode(exprs, head, tail)
-	=>
-	VarTypeInExpr(var, head) = sigma
-  & VarTypeInExprs(var, tail) = sigma
-  ;
+    ConsStmtListNode(stmts, _, tail)
+    & sigma = VarTypeInStmts(var, stmts)
+    =>
+    VarTypeInStmts(var, tail) = sigma
+    ;
+Axiom
+    ConsArgListNode(al, _, _, tail)
+    & sigma = VarTypeInArgList(var, al)
+    =>
+    VarTypeInArgList(var, tail) = sigma;
+Axiom
+    ConsExprListNode(exprs, head, tail)
+    & sigma = VarTypeInExprs(var, exprs)
+    =>
+    VarTypeInExpr(var, head) = sigma
+    & VarTypeInExprs(var, tail) = sigma
+    ;
 
 // ## Propagating variables through nodes
 //
@@ -681,10 +705,9 @@ Axiom
 // Propagate ambient variables into arg lists.
 Axiom
     Function(func, _, args, _, _)
+    & VarTypeInFunction(var, func)!
     =>
-    VarTypeInArgListNode(var, args)
-    ~>
-    VarTypeInFunction(var, func)
+    VarTypeInArgList(var, args)!
     ;
 
 // By the "root" of a node list l we mean the unique nil node from which l can be obtained by
@@ -700,10 +723,9 @@ Axiom ConsArgListNode(al, _, _, tail) => RootNilArgListNode(al) ~> RootNilArgLis
 // Propagate variables from the arg list into the body.
 Axiom
     Function(_, _, args, _, body)
+    & sigma = VarTypeInArgList(var, RootNilArgListNode(args))
     =>
-    VarTypeInStmts(var, body)
-    ~>
-    VarTypeInArgListNode(var, RootNilArgListNode(args))
+    VarTypeInStmts(var, body) = sigma
     ;
 
 // ### Propagating variables through statements
@@ -713,17 +735,16 @@ Axiom
 Axiom
     ConsStmtListNode(stmts, head, _)
     & FunctionStmtNode(head, func)
+    & sigma = VarTypeInStmts(var, stmts)
     =>
-    VarTypeInFunction(var, func)
-    ~>
-    VarTypeInStmts(var, stmts)
+    VarTypeInFunction(var, func) = sigma
     ;
 
 // Propagate variables through if statements.
 Axiom
     ConsStmtListNode(stmts, head, _)
     & IfStmtNode(head, cond, true_branch, false_branch)
-    & VarTypeInStmts(var, stmts) = sigma
+    & sigma = VarTypeInStmts(var, stmts)
     =>
     VarTypeInExpr(var, cond) = sigma
     & VarTypeInStmts(var, true_branch) = sigma
@@ -744,30 +765,27 @@ Axiom
 Axiom
     ConsStmtListNode(stmts, head, _)
     & ExprStmtNode(head, expr)
+    & sigma = VarTypeInStmts(var, stmts)
     =>
-    VarTypeInExpr(var, expr)
-    ~>
-    VarTypeInStmts(var, stmts)
+    VarTypeInExpr(var, expr) = sigma
     ;
 
 // Propagate previously defined variables through let statements into initializer expressions.
 Axiom
     ConsStmtListNode(stmts, head, _)
     & LetStmtNode(head, _, _, expr)
+    & sigma = VarTypeInStmts(var, stmts)
     =>
-    VarTypeInExpr(var, expr)
-    ~>
-    VarTypeInStmts(var, stmts)
+    VarTypeInExpr(var, expr) = sigma
     ;
 
 // Propagate variables through return statements.
 Axiom
     ConsStmtListNode(stmts, head, _)
     & ReturnStmtNode(head, expr)
+    & sigma = VarTypeInStmts(var, stmts)
     =>
-    VarTypeInExpr(var, expr)
-    ~>
-    VarTypeInStmts(var, stmts)
+    VarTypeInExpr(var, expr) = sigma
     ;
 
 // ### Propagating variables through expressions
@@ -775,7 +793,7 @@ Axiom
 // Propagate variables through equality expressions.
 Axiom
     EqualsExprNode(expr, lhs, rhs)
-    & VarTypeInExpr(var, expr) = sigma
+    & sigma = VarTypeInExpr(var, expr)
     =>
     VarTypeInExpr(var, lhs) = sigma
     & VarTypeInExpr(var, rhs) = sigma
@@ -784,7 +802,7 @@ Axiom
 // Propagate variables through function application expressions.
 Axiom
     AppExprNode(expr, func, args)
-    & VarTypeInExpr(var, expr) = sigma
+    & sigma = VarTypeInExpr(var, expr)
     =>
     VarTypeInExpr(var, func) = sigma
     & VarTypeInExprs(var, args) = sigma
@@ -793,10 +811,9 @@ Axiom
 // Propagate variables through function expression.
 Axiom
     FunctionExprNode(expr, func)
+    & sigma = VarTypeInExpr(var, expr)
     =>
-    VarTypeInFunction(var, func)
-    ~>
-    VarTypeInExpr(var, expr)
+    VarTypeInFunction(var, func) = sigma
     ;
 
 // # Expression typing.
