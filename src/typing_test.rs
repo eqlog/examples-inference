@@ -173,3 +173,15 @@ fn app_func_to_dom_cod() {
     assert!(var_has_type("c", number_type, &p, &lits));
     assert!(var_has_type("e", boolean_type, &p, &lits));
 }
+
+#[test]
+fn bad_type_usage_function() {
+    let err = check_source(&indoc! {"
+        let x: number = 5;
+        function foo() {
+            let y: string = x;
+        }
+    "})
+    .unwrap_err();
+    assert_eq!(&err.to_string(), "Conflicting type constraints");
+}
