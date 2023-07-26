@@ -537,9 +537,9 @@ Axiom StringLiteralExprNode(expr, _) => StringType() ~> ExprType(expr);
 Axiom NumberLiteralExprNode(expr, _) => NumberType() ~> ExprType(expr);
 
 Axiom
-	  EqualsExprNode(eq, lhs, rhs)
+    EqualsExprNode(eq, lhs, rhs)
     & eq_type = ExprType(eq)
-	  & lhs_type = ExprType(lhs)
+    & lhs_type = ExprType(lhs)
     & rhs_type = ExprType(rhs)
     =>
     eq_type = BooleanType()
