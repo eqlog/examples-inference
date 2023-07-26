@@ -139,7 +139,7 @@ Axiom
     FunctionStmtNode(head, func)
     & Function(func, var, _, _ ,_)
     & VarInStmts(var, stmts)
-		& ConsStmtListNode(stmts, head, _)
+    & ConsStmtListNode(stmts, head, _)
     =>
     ConflictingVariables()
     ;
@@ -153,12 +153,12 @@ Axiom VarInArgList(var, al) & ConsArgListNode(al, var, _, _) => ConflictingVaria
 Axiom ConsStmtListNode(stmts, _, tail) & VarInStmts(var, stmts) => VarInStmts(var, tail);
 Axiom ConsArgListNode(al, _, _, tail) & VarInArgList(var, al) => VarInArgList(var, tail);
 Axiom
-	VarInExprs(var, exprs) &
-	ConsExprListNode(exprs, head, tail)
-	=>
-	VarInExpr(var, head)
-  & VarInExprs(var, tail)
-  ;
+    VarInExprs(var, exprs) &
+    ConsExprListNode(exprs, head, tail)
+    =>
+    VarInExpr(var, head)
+    & VarInExprs(var, tail)
+    ;
 
 // ## Propagating variables through nodes
 //
