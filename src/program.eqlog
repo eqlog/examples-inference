@@ -177,7 +177,7 @@ Axiom
     FunctionTypeNode(tn, args, codomain)
     & dom_types = SemanticArgTypes(args)
     & cod_type = SemanticType(codomain)
-	& function_type = SemanticType(tn)
+    & function_type = SemanticType(tn)
     =>
     FunctionType(dom_types, cod_type) = function_type
     ;
