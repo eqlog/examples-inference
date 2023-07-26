@@ -94,9 +94,18 @@ Func CodomainType : Type -> Type;
 
 Axiom DomainTypes(tau)! => CodomainType(tau)!;
 Axiom CodomainType(tau)! => DomainTypes(tau)!;
-Axiom DomainTypes(FunctionType(domain, _)) ~> domain;
-Axiom CodomainType(FunctionType(_, codomain)) ~> codomain;
-Axiom FunctionType(DomainTypes(tau), CodomainType(tau)) ~> tau;
+Axiom
+    kappa = FunctionType(sigmas, tau)
+    =>
+    DomainTypes(kappa) = sigmas
+    & CodomainType(kappa) = tau
+    ;
+Axiom
+    sigmas = DomainTypes(kappa)
+    & tau = CodomainType(kappa)
+    =>
+    FunctionType(sigmas, tau) = kappa
+    ;
 
 // ## TypeList operators.
 // We're equating TypeList elements sometimes. In well-typed programs, this is only possible if the
@@ -139,17 +148,38 @@ Axiom ag: ArgListNode => SemanticArgTypes(ag)!;
 
 // Since another axiom enforces that SemanticType is total, these rules will fire for all
 // TypeNodes.
-Axiom VoidTypeNode(tn) => VoidType() ~> SemanticType(tn);
-Axiom BooleanTypeNode(tn) => BooleanType() ~> SemanticType(tn);
-Axiom NumberTypeNode(tn) => NumberType() ~> SemanticType(tn);
-Axiom StringTypeNode(tn) => StringType() ~> SemanticType(tn);
+Axiom
+    VoidTypeNode(tn)
+    & sigma = SemanticType(tn)
+    =>
+    VoidType() = sigma
+    ;
+Axiom
+    BooleanTypeNode(tn)
+    & sigma = SemanticType(tn)
+    =>
+    BooleanType() = sigma
+    ;
+Axiom
+    NumberTypeNode(tn)
+    & sigma = SemanticType(tn)
+    =>
+    NumberType() = sigma
+    ;
+Axiom
+    StringTypeNode(tn)
+    & sigma = SemanticType(tn)
+    =>
+    StringType() = sigma
+    ;
+
 // Other axioms assert that SemanticArgTypes and SemanticType are total functions, so this rule
 // will fire for al FunctionTypeNodes.
 Axiom
     FunctionTypeNode(tn, args, codomain)
     & dom_types = SemanticArgTypes(args)
     & cod_type = SemanticType(codomain)
-	  & function_type = SemanticType(tn)
+    & function_type = SemanticType(tn)
     =>
     FunctionType(dom_types, cod_type) = function_type
     ;
@@ -164,14 +194,19 @@ Axiom
     SemanticOptType(otn) = sigma
     ;
 
-Axiom NilArgListNode(al) => NilTypeList() ~> SemanticArgTypes(al);
+Axiom
+    NilArgListNode(al)
+    & semantic_types = SemanticArgTypes(al)
+    =>
+    NilTypeList() = semantic_types
+    ;
 Axiom
     ConsArgListNode(al, _, head_type, tail)
     & semantic_head = SemanticOptType(head_type)
     & semantic_tail = SemanticArgTypes(tail)
-    & sat = SemanticArgTypes(al)
+    & semantic_types = SemanticArgTypes(al)
     =>
-    sat = ConsTypeList(semantic_head, semantic_tail)
+    semantic_types = ConsTypeList(semantic_head, semantic_tail)
     ;
 
 // ## Determined types, i.e. those that do not contain unsolved type variables.
@@ -302,7 +337,7 @@ Axiom
     & TypesInContext(sigmas_tail, gamma)
     =>
     TypesInContext(sigmas, gamma)
-	  ;
+    ;
 
 Axiom
     & TypesInContext(ConsTypeList(head, tail), gamma)
@@ -400,20 +435,20 @@ Axiom
 
 // Relate type contexts of node lists with the type contexts of individual nodes in the lists.
 Axiom
-		ConsArgListNode(al, _, _, tail)
+    ConsArgListNode(al, _, _, tail)
     & ArgListContext(al) = ctx
     =>
     & ArgListContext(tail) = ctx
     ;
 Axiom
-		ConsStmtListNode(stmts, head, tail)
+    ConsStmtListNode(stmts, head, tail)
     & StmtsTypeContext(stmts) = ctx
     =>
     StmtTypeContext(head) = ctx
     & StmtsTypeContext(tail) = ctx
     ;
 Axiom
-		ConsExprListNode(stmts, head, tail)
+    ConsExprListNode(stmts, head, tail)
     & ExprsTypeContext(stmts) = ctx
     =>
     ExprTypeContext(head) = ctx
@@ -879,9 +914,9 @@ Axiom StringLiteralExprNode(expr, _) => StringType() ~> ExprType(expr);
 Axiom NumberLiteralExprNode(expr, _) => NumberType() ~> ExprType(expr);
 
 Axiom
-	  EqualsExprNode(eq, lhs, rhs)
+    EqualsExprNode(eq, lhs, rhs)
     & eq_type = ExprType(eq)
-	  & lhs_type = ExprType(lhs)
+    & lhs_type = ExprType(lhs)
     & rhs_type = ExprType(rhs)
     =>
     eq_type = BooleanType()
