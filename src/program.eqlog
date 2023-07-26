@@ -193,22 +193,20 @@ Axiom
 // By the "end" of a node list l we mean the unique nil node from which l can be obtained by
 // repeated consing. We need access to the end of an ArgListNode so that we know the full set of
 // variables introduced in that arg list.
-
-// The axioms are such that NilArgListEnd is total if every arg list is Nil or Cons (and not
-// opaque).
-Func ArgListNodeEnd : ArgListNode -> ArgListNode;
-Axiom NilArgListNode(args) => ArgListNodeEnd(args) = args;
+Pred ArgListEnd : ArgListNode * ArgListNode;
+Axiom NilArgListNode(arg_list) => ArgListEnd(arg_list, arg_list);
 Axiom
-    ConsArgListNode(al, _, _, tail)
-    & tail_end = ArgListNodeEnd(tail)
+    ConsArgListNode(arg_list, _, _, tail)
+    & ArgListEnd(tail, end)
     =>
-    ArgListNodeEnd(al) = tail_end
+    ArgListEnd(arg_list, end)
     ;
 
 // Propagate variables from the arg list into the body.
 Axiom
     Function(_, _, args, _, body)
-    & VarInArgList(var, ArgListNodeEnd(args))
+    & ArgListEnd(args, args_end)
+    & VarInArgList(var, args_end)
     =>
     VarInStmts(var, body)
     ;
