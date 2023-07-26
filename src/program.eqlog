@@ -149,7 +149,7 @@ Axiom
     FunctionTypeNode(tn, args, codomain)
     & dom_types = SemanticArgTypes(args)
     & cod_type = SemanticType(codomain)
-	  & function_type = SemanticType(tn)
+    & function_type = SemanticType(tn)
     =>
     FunctionType(dom_types, cod_type) = function_type
     ;
@@ -302,7 +302,7 @@ Axiom
     & TypesInContext(sigmas_tail, gamma)
     =>
     TypesInContext(sigmas, gamma)
-	  ;
+    ;
 
 Axiom
     & TypesInContext(ConsTypeList(head, tail), gamma)
@@ -400,20 +400,20 @@ Axiom
 
 // Relate type contexts of node lists with the type contexts of individual nodes in the lists.
 Axiom
-		ConsArgListNode(al, _, _, tail)
+    ConsArgListNode(al, _, _, tail)
     & ArgListContext(al) = ctx
     =>
     & ArgListContext(tail) = ctx
     ;
 Axiom
-		ConsStmtListNode(stmts, head, tail)
+    ConsStmtListNode(stmts, head, tail)
     & StmtsTypeContext(stmts) = ctx
     =>
     StmtTypeContext(head) = ctx
     & StmtsTypeContext(tail) = ctx
     ;
 Axiom
-		ConsExprListNode(stmts, head, tail)
+    ConsExprListNode(stmts, head, tail)
     & ExprsTypeContext(stmts) = ctx
     =>
     ExprTypeContext(head) = ctx
@@ -879,9 +879,9 @@ Axiom StringLiteralExprNode(expr, _) => StringType() ~> ExprType(expr);
 Axiom NumberLiteralExprNode(expr, _) => NumberType() ~> ExprType(expr);
 
 Axiom
-	  EqualsExprNode(eq, lhs, rhs)
+    EqualsExprNode(eq, lhs, rhs)
     & eq_type = ExprType(eq)
-	  & lhs_type = ExprType(lhs)
+    & lhs_type = ExprType(lhs)
     & rhs_type = ExprType(rhs)
     =>
     eq_type = BooleanType()
