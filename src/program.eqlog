@@ -226,7 +226,7 @@ Axiom
 // function, then none of the variables introduced in the body will be in scope for body. Instead,
 // all of those variables are in scope at the NilStmtListNode of body. Similarly, if args is the
 // ArgListNode of a function definition, then the variables listed in args are only in scope for the
-// NilArgListNode at the root of args.
+// NilArgListNode at the end of args.
 Func VarTypeInStmts : Var * StmtListNode -> Type;
 Func VarTypeInFunction : Var * FunctionNode -> Type;
 Func VarTypeInArgList : Var * ArgListNode -> Type;
@@ -353,20 +353,25 @@ Axiom
     VarTypeInArgList(var, args)!
     ;
 
-// By the "root" of a node list l we mean the unique nil node from which l can be obtained by
-// repeated consing. We need access to the root of an ArgListNode so that we know the full set of
+// By the "end" of a node list l we mean the unique nil node from which l can be obtained by
+// repeated consing. We need access to the end of an ArgListNode so that we know the full set of
 // variables introduced in that arg list.
 
-// The axioms are such that RootNilArgListNode is total if every arg list is Nil or Cons (and not
+// The axioms are such that NilArgListEnd is total if every arg list is Nil or Cons (and not
 // opaque).
-Func RootNilArgListNode : ArgListNode -> ArgListNode;
-Axiom NilArgListNode(args) => RootNilArgListNode(args) = args;
-Axiom ConsArgListNode(al, _, _, tail) => RootNilArgListNode(al) ~> RootNilArgListNode(tail);
+Func ArgListNodeEnd : ArgListNode -> ArgListNode;
+Axiom NilArgListNode(args) => ArgListNodeEnd(args) = args;
+Axiom
+    ConsArgListNode(al, _, _, tail)
+    & tail_end = ArgListNodeEnd(tail)
+    =>
+    ArgListNodeEnd(al) = tail_end
+    ;
 
 // Propagate variables from the arg list into the body.
 Axiom
     Function(_, _, args, _, body)
-    & sigma = VarTypeInArgList(var, RootNilArgListNode(args))
+    & sigma = VarTypeInArgList(var, ArgListNodeEnd(args))
     =>
     VarTypeInStmts(var, body) = sigma
     ;
