@@ -7,7 +7,7 @@ pub enum LanguageError {
     /// Line and column (both 0-based) of a parse error.
     ParseError { line: usize, column: usize },
     /// A variable is declared more than once for the same scope.
-    ConflictingVariables,
+    VariableShadowing,
     /// A variable is used without prior declaration.
     UndeclaredVariable,
 }
@@ -52,7 +52,7 @@ impl fmt::Display for LanguageError {
                 let column_number = column + 1;
                 write!(f, "Syntax error at {line_number}:{column_number}")?;
             }
-            ConflictingVariables => {
+            VariableShadowing => {
                 write!(f, "Variable declared more than once")?;
             }
             UndeclaredVariable => {

@@ -1,4 +1,4 @@
-Pred ConflictingVariables: ();
+Pred VariableShadowing: ();
 
 // # The AST, encoded algebraically/relationally.
 Sort ModuleNode;
@@ -134,17 +134,17 @@ Axiom
 // For each base node case that introduces a variable, it is an error if the variable is already in
 // scope before the node.
 
-Axiom LetStmtNode(head, var, _, _) & VarInStmts(var, stmts) & ConsStmtListNode(stmts, head, _) => ConflictingVariables();
+Axiom LetStmtNode(head, var, _, _) & VarInStmts(var, stmts) & ConsStmtListNode(stmts, head, _) => VariableShadowing();
 Axiom
     FunctionStmtNode(head, func)
     & Function(func, var, _, _ ,_)
     & VarInStmts(var, stmts)
     & ConsStmtListNode(stmts, head, _)
     =>
-    ConflictingVariables()
+    VariableShadowing()
     ;
-Axiom Function(func, var, _, _, _) & VarInFunction(var, func) => ConflictingVariables();
-Axiom VarInArgList(var, al) & ConsArgListNode(al, var, _, _) => ConflictingVariables();
+Axiom Function(func, var, _, _, _) & VarInFunction(var, func) => VariableShadowing();
+Axiom VarInArgList(var, al) & ConsArgListNode(al, var, _, _) => VariableShadowing();
 
 // ## Propagation of variables through lists
 //

@@ -17,6 +17,21 @@ use std::env;
 use std::fs;
 use std::process::ExitCode;
 
+fn has_undeclared_variables(p: &Program) -> bool {
+    for (expr, var) in p.iter_variable_expr_node() {
+        if p.iter_var_in_expr()
+            .find(|(var0, expr0)| {
+                p.are_equal_expr_node(*expr0, expr) && p.are_equal_var(*var0, var)
+            })
+            .is_none()
+        {
+            return true;
+        }
+    }
+
+    false
+}
+
 fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageError> {
     let no_comments_src = erase_comments(src);
 
@@ -29,19 +44,12 @@ fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageEr
 
     p.close();
 
-    if p.conflicting_variables() {
-        return Err(LanguageError::ConflictingVariables);
+    if p.variable_shadowing() {
+        return Err(LanguageError::VariableShadowing);
     }
 
-    for (expr, var) in p.iter_variable_expr_node() {
-        if p.iter_var_in_expr()
-            .find(|(var0, expr0)| {
-                p.are_equal_expr_node(*expr0, expr) && p.are_equal_var(*var0, var)
-            })
-            .is_none()
-        {
-            return Err(LanguageError::UndeclaredVariable);
-        }
+    if has_undeclared_variables(&p) {
+        return Err(LanguageError::UndeclaredVariable);
     }
 
     Ok((p, lits, module))
