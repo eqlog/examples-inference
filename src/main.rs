@@ -18,18 +18,8 @@ use std::fs;
 use std::process::ExitCode;
 
 fn has_undeclared_variables(p: &Program) -> bool {
-    for (expr, var) in p.iter_variable_expr_node() {
-        if p.iter_var_in_expr()
-            .find(|(var0, expr0)| {
-                p.are_equal_expr_node(*expr0, expr) && p.are_equal_var(*var0, var)
-            })
-            .is_none()
-        {
-            return true;
-        }
-    }
-
-    false
+    p.iter_variable_expr_node()
+        .any(|(expr, var)| !p.var_in_expr(var, expr))
 }
 
 fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageError> {
