@@ -140,12 +140,20 @@ Func SemanticType : TypeNode -> Type;
 Func SemanticOptType : OptTypeNode -> Type;
 Func SemanticArgTypes : ArgListNode -> TypeList;
 
+// The types of expressions and function literals:
+Func ExprType : ExprNode -> Type;
+Func ExprTypes : ExprListNode -> TypeList;
+Func FunctionNodeType : FunctionNode -> Type;
+
+// All of the functions into Type that we've just declared are total.
 Axiom tn: TypeNode => SemanticType(tn)!;
 Axiom otn: OptTypeNode => SemanticOptType(otn)!;
-Axiom ag: ArgListNode => SemanticArgTypes(ag)!;
+Axiom agn: ArgListNode => SemanticArgTypes(agn)!;
+Axiom en: ExprNode => ExprType(en)!;
+Axiom eln: ExprListNode => ExprTypes(eln)!;
+Axiom fcn: FunctionNode => FunctionNodeType(fcn)!;
 
-// Since another axiom enforces that SemanticType is total, these rules will fire for all
-// TypeNodes.
+// Since SemanticType is total, these rules will fire for all TypeNodes.
 Axiom
     VoidTypeNode(tn)
     & sigma = SemanticType(tn)
@@ -205,44 +213,6 @@ Axiom
     & semantic_types = SemanticArgTypes(al)
     =>
     semantic_types = ConsTypeList(semantic_head, semantic_tail)
-    ;
-
-// ## Determined types, i.e. those that do not contain unsolved type variables.
-//
-// In well-formed programs, every type should be determined.
-//
-// Without polymorphism, for example the following program contains an
-// undetermined type:
-//
-//   function foo(x) {}
-//
-// Here the type of `x` is not determined. Applying the function at least once on an argument with
-// determined type will determine the argument type of `foo` though, for example if we add the
-// statement `foo(5);`
-
-Pred DeterminedType : Type;
-Pred DeterminedTypes : TypeList;
-
-// A type list is determined if all of the types it contains are determined.
-Axiom sigmas = NilTypeList() => DeterminedTypes(sigmas);
-Axiom
-    sigmas = ConsTypeList(head, tail)
-    & DeterminedType(head)
-    & DeterminedTypes(tail)
-    =>
-    DeterminedTypes(sigmas)
-    ;
-
-Axiom sigma = VoidType() => DeterminedType(sigma);
-Axiom sigma = BooleanType() => DeterminedType(sigma);
-Axiom sigma = NumberType() => DeterminedType(sigma);
-Axiom sigma = StringType() => DeterminedType(sigma);
-Axiom
-    sigma = FunctionType(dom, cod)
-    & DeterminedTypes(dom)
-    & DeterminedType(cod)
-    =>
-    DeterminedType(sigma)
     ;
 
 
