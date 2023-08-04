@@ -142,12 +142,20 @@ Func SemanticType : TypeNode -> Type;
 Func SemanticOptType : OptTypeNode -> Type;
 Func SemanticArgTypes : ArgListNode -> TypeList;
 
+// The types of expressions and function literals:
+Func ExprType : ExprNode -> Type;
+Func ExprTypes : ExprListNode -> TypeList;
+Func FunctionNodeType : FunctionNode -> Type;
+
+// All of the functions into Type that we've just declared are total.
 Axiom tn: TypeNode => SemanticType(tn)!;
 Axiom otn: OptTypeNode => SemanticOptType(otn)!;
-Axiom ag: ArgListNode => SemanticArgTypes(ag)!;
+Axiom agn: ArgListNode => SemanticArgTypes(agn)!;
+Axiom en: ExprNode => ExprType(en)!;
+Axiom eln: ExprListNode => ExprTypes(eln)!;
+Axiom fcn: FunctionNode => FunctionNodeType(fcn)!;
 
-// Since another axiom enforces that SemanticType is total, these rules will fire for all
-// TypeNodes.
+// Since SemanticType is total, these rules will fire for all TypeNodes.
 Axiom
     VoidTypeNode(tn)
     & sigma = SemanticType(tn)
@@ -410,7 +418,6 @@ Axiom exprs : ExprListNode => ExprsTypeContext(exprs)!;
 // ## Populating the TypeInContext predicate.
 
 // Forward declarations.
-Func ExprType : ExprNode -> Type;
 Sort GeneralType;
 Func VarTypeInArgList : Var * ArgListNode -> GeneralType;
 Func MonoType : Type -> GeneralType;
@@ -612,9 +619,6 @@ Func VarTypeInFunction : Var * FunctionNode -> GeneralType;
 // Func VarTypeInArgList : Var * ArgListNode -> GeneralType;
 Func VarTypeInExpr : Var * ExprNode -> GeneralType;
 Func VarTypeInExprs : Var * ExprListNode -> GeneralType;
-
-// Forward declarations of the function assigning semantic types to function literals.
-Func FunctionNodeType : FunctionNode -> Type;
 
 // ## Base cases: Nodes that introduce variables
 
@@ -855,9 +859,11 @@ Axiom
     ;
 
 // # Expression typing.
+//
 // Declared earlier:
-// Func ExprType : ExprNode -> Type;
-Func ExprTypes : ExprListNode -> TypeList;
+//
+//   Func ExprType : ExprNode -> Type;
+//   Func ExprTypes : ExprListNode -> TypeList;
 
 // The substitutions associated to expressions with PolyTypes that must be instantiated into
 // MonoTypes.
