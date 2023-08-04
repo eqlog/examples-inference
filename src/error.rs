@@ -13,11 +13,6 @@ pub enum LanguageError {
     /// Some typing constraints conflict. E.g. a variable must both have type `string` and type
     /// `number`.
     ConflictingTypes,
-    /// The type of an expression is not determined, for example because an unused function
-    /// argument does not have an explicit type annotation.
-    // TODO: Temporarily allowed to be unused until we enable checking for undetermined types.
-    #[allow(unused)]
-    UndeterminedType,
 }
 
 impl LanguageError {
@@ -68,9 +63,6 @@ impl fmt::Display for LanguageError {
             }
             ConflictingTypes => {
                 write!(f, "Conflicting type constraints")?;
-            }
-            UndeterminedType => {
-                write!(f, "Undetermined type")?;
             }
         }
 
