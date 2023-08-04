@@ -140,12 +140,20 @@ Func SemanticType : TypeNode -> Type;
 Func SemanticOptType : OptTypeNode -> Type;
 Func SemanticArgTypes : ArgListNode -> TypeList;
 
+// The types of expressions and function literals:
+Func ExprType : ExprNode -> Type;
+Func ExprTypes : ExprListNode -> TypeList;
+Func FunctionNodeType : FunctionNode -> Type;
+
+// All of the functions into Type that we've just declared are total.
 Axiom tn: TypeNode => SemanticType(tn)!;
 Axiom otn: OptTypeNode => SemanticOptType(otn)!;
-Axiom ag: ArgListNode => SemanticArgTypes(ag)!;
+Axiom agn: ArgListNode => SemanticArgTypes(agn)!;
+Axiom en: ExprNode => ExprType(en)!;
+Axiom eln: ExprListNode => ExprTypes(eln)!;
+Axiom fcn: FunctionNode => FunctionNodeType(fcn)!;
 
-// Since another axiom enforces that SemanticType is total, these rules will fire for all
-// TypeNodes.
+// Since SemanticType is total, these rules will fire for all TypeNodes.
 Axiom
     VoidTypeNode(tn)
     & sigma = SemanticType(tn)
@@ -267,9 +275,6 @@ Func VarTypeInFunction : Var * FunctionNode -> Type;
 Func VarTypeInArgList : Var * ArgListNode -> Type;
 Func VarTypeInExpr : Var * ExprNode -> Type;
 Func VarTypeInExprs : Var * ExprListNode -> Type;
-
-// Forward declaration of the function assigning semantic types to expressions.
-Func ExprType : ExprNode -> Type;
 
 // ## Base cases: Nodes that introduce variables
 
@@ -504,9 +509,11 @@ Axiom
     ;
 
 // # Expression typing.
+//
 // Declared earlier:
-// Func ExprType : ExprNode -> Type;
-Func ExprTypes : ExprListNode -> TypeList;
+//
+//   Func ExprType : ExprNode -> Type;
+//   Func ExprTypes : ExprListNode -> TypeList;
 
 // Both ExprType and ExprTypes are total. Our axioms enforce that ExprTypes is given by mapping
 // ExprType on each ExprNode element.
