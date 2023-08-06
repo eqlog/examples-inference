@@ -24,6 +24,10 @@ fn has_undeclared_variables(p: &Program) -> bool {
         .any(|(expr, var)| p.var_type_in_expr(var, expr).is_none())
 }
 
+fn has_undetermined_type(p: &Program) -> bool {
+    p.iter_type().any(|sigma| !p.determined_type(sigma))
+}
+
 fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageError> {
     let no_comments_src = erase_comments(src);
 
@@ -48,7 +52,7 @@ fn check_source(src: &str) -> Result<(Program, Literals, ModuleNode), LanguageEr
         return Err(LanguageError::ConflictingTypes);
     }
 
-    if p.iter_type().any(|sigma| !p.determined_type(sigma)) {
+    if has_undetermined_type(&p) {
         return Err(LanguageError::UndeterminedType);
     }
 
