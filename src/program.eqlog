@@ -243,9 +243,10 @@ Func VarTypeInExprs : Var * ExprListNode -> Type;
 // Every let statements introduces a variable.
 Axiom
     ConsStmtListNode(_, head, tail)
-    & LetStmtNode(head, var, _, _)
+    & LetStmtNode(head, var, ty_annot, _)
+    & ty = SemanticOptType(ty_annot)
     =>
-    VarTypeInStmts(var, tail)!
+    VarTypeInStmts(var, tail) = ty
     ;
 
 // Every function statement introduces a variable for statements occuring after the function
@@ -254,23 +255,26 @@ Axiom
     ConsStmtListNode(_, head, tail)
     & FunctionStmtNode(head, func)
     & Function(func, var, _, _ ,_)
+    & ty = FunctionNodeType(func)
     =>
-    VarTypeInStmts(var, tail)!
+    VarTypeInStmts(var, tail) = ty
     ;
 
 // Every function node introduces the name of the function in the ArgListNode of the function (and
 // hence, by the propagation axioms below, also in the body of the function).
 Axiom
-    Function(_, var, arg, _ ,_)
+    Function(func, var, arg, _ ,_)
+    & ty = FunctionNodeType(func)
     =>
-    VarTypeInArgList(var, arg)!
+    VarTypeInArgList(var, arg) = ty
     ;
 
 // Every function argument introduces a variable.
 Axiom
-    ConsArgListNode(_, var, _, tail)
+    ConsArgListNode(_, var, ty_annot, tail)
+    & ty = SemanticOptType(ty_annot)
     =>
-    VarTypeInArgList(var, tail)!
+    VarTypeInArgList(var, tail) = ty
     ;
 
 // ## Errors due to multiple introductions of the same variable
