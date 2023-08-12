@@ -422,14 +422,6 @@ Sort GeneralType;
 Func VarTypeInArgList : Var * ArgListNode -> GeneralType;
 Func MonoType : Type -> GeneralType;
 
-// The type of an expression is in the type context of that expression.
-Axiom
-    sigma = ExprType(expr)
-    & ctx = ExprTypeContext(expr)
-    =>
-    TypeInContext(sigma, ctx)
-    ;
-
 // The type of a function argument is in the context of the arg list of the function.
 Axiom
     ConsArgListNode(arg_list, head_var, _, tail)
