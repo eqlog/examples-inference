@@ -624,7 +624,7 @@ Axiom
 
 // For each node kind X in which variables matter, we introduce a function
 //
-//   VarTypeInX : Var * X -> Type
+//   VarTypeInX : Var * X -> GeneralType
 //
 // and add axioms such that VarTypeInX(var, n) = sigma holds iff var is considered to be in scope
 // for node n and has type sigma. That var must be in scope for n means that var must have been
