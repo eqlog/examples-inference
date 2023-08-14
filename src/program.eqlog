@@ -518,6 +518,16 @@ Axiom
 // ## Propagate type contexts through expressions.
 
 Axiom
+    EqualsExprNode(expr, lhs, rhs)
+    & expr_ctx = ExprTypeContext(expr)
+    & lhs_ctx = ExprTypeContext(lhs)
+    & rhs_ctx = ExprTypeContext(rhs)
+    =>
+    expr_ctx = lhs_ctx
+    & lhs_ctx = rhs_ctx
+    ;
+
+Axiom
     AppExprNode(expr, fn_expr, arg_exprs)
     & expr_ctx = ExprTypeContext(expr)
     & fn_ctx = ExprTypeContext(fn_expr)

@@ -239,3 +239,25 @@ fn bad_type_usage_function() {
     .unwrap_err();
     assert_eq!(&err.to_string(), "Conflicting type constraints");
 }
+
+#[test]
+fn bad_nested_function_in_equals() {
+    // If we forget to propagate type contexts into lhs and rhs of an == expression, then the type
+    // of baz will be `forall b. () => b`, since the type `a` of `x` will not be in the type
+    // context of `bar`. Thus, `foo` will have type `forall a b. (a, b) => void` when it should
+    // actually have type `forall a. (a, a) => void`.
+    let err = check_source(&indoc! {"
+        function foo (x, y) {
+            y ==
+                (function bar() {
+                    function baz() {
+                        return x;
+                    }
+                    return baz();
+                })();
+        }
+        foo(1, 'xyz');
+    "})
+    .unwrap_err();
+    assert_eq!(&err.to_string(), "Conflicting type constraints");
+}
