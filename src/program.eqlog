@@ -474,18 +474,21 @@ Axiom
 // ## Propagate type contexts through statements.
 Axiom
     ExprStmtNode(stmt, expr)
+    & ctx = StmtTypeContext(stmt)
     =>
-    ExprTypeContext(expr) ~> StmtTypeContext(stmt)
+    ExprTypeContext(expr) = ctx
     ;
 Axiom
     LetStmtNode(stmt, _, _, expr)
+    & ctx = StmtTypeContext(stmt)
     =>
-    ExprTypeContext(expr) ~> StmtTypeContext(stmt)
+    ExprTypeContext(expr) = ctx
     ;
 Axiom
     ReturnStmtNode(stmt, expr)
+    & ctx = StmtTypeContext(stmt)
     =>
-    ExprTypeContext(expr) ~> StmtTypeContext(stmt)
+    ExprTypeContext(expr) = ctx
     ;
 Axiom
     FunctionStmtNode(stmt, func)
@@ -553,7 +556,11 @@ Func SubstitutionBase : Substitution -> TypeContext;
 Func Substitute : Substitution * Type -> Type;
 Func Substitutes : Substitution * TypeList -> TypeList;
 
-Axiom NilTypeList() ~> Substitutes(_, NilTypeList());
+Axiom
+    list_subst = Substitutes(_, NilTypeList())
+    =>
+    list_subst = NilTypeList()
+    ;
 Axiom
     Substitutes(subst, ConsTypeList(head, tail))!
     =>
@@ -562,9 +569,12 @@ Axiom
     ;
 
 Axiom
-    ConsTypeList(Substitute(subst, head), Substitutes(subst, tail))
-    ~>
-    Substitutes(subst, ConsTypeList(head, tail));
+    head_subst = Substitute(subst, head)
+    & tail_subst = Substitutes(subst, tail)
+    & substs = Substitutes(subst, ConsTypeList(head, tail))
+    =>
+    substs = ConsTypeList(head_subst, tail_subst)
+    ;
 
 // ## Substitution laws.
 Axiom
@@ -574,10 +584,26 @@ Axiom
     sigma = tau
     ;
 
-Axiom VoidType() ~> Substitute(_, VoidType());
-Axiom BooleanType() ~> Substitute(_, BooleanType());
-Axiom NumberType() ~> Substitute(_, NumberType());
-Axiom StringType() ~> Substitute(_, StringType());
+Axiom
+    subst_void = Substitute(_, VoidType())
+    =>
+    VoidType() = subst_void
+    ;
+Axiom
+    subst_boolean = Substitute(_, BooleanType())
+    =>
+    BooleanType() = subst_boolean
+    ;
+Axiom
+    subst_number = Substitute(_, NumberType())
+    =>
+    NumberType() = subst_number
+    ;
+Axiom
+    subst_string = Substitute(_, StringType())
+    =>
+    StringType() = subst_string
+    ;
 
 Axiom
     Substitute(subst, FunctionType(dom, cod))!
@@ -586,11 +612,12 @@ Axiom
     & Substitute(subst, cod)!
     ;
 Axiom
-    FunctionType(Substitutes(subst, dom), Substitute(subst, cod))
-    ~>
-    Substitute(subst, FunctionType(dom, cod))
+    dom_substs = Substitutes(subst, dom)
+    & cod_subst = Substitute(subst, cod)
+    & func_subst = Substitute(subst, FunctionType(dom, cod))
+    =>
+    FunctionType(dom_substs, cod_subst) = func_subst
     ;
-
 
 
 // # Variable resolution.
@@ -651,10 +678,9 @@ Axiom
     & FunctionStmtNode(head, func)
     & ctx = StmtTypeContext(head)
     & Function(func, var, _, _ ,_)
+    & ty = PolyType(ctx, FunctionNodeType(func))
     =>
-    VarTypeInStmts(var, tail)
-    ~>
-    PolyType(ctx, FunctionNodeType(func))
+    VarTypeInStmts(var, tail) = ty
     ;
 
 // Every function node introduces the name of the function in the ArgListNode of the function (and
@@ -916,23 +942,24 @@ Axiom
 Axiom
     VariableExprNode(expr, var)
     & VarTypeInExpr(var, expr) = PolyType(ctx, _)
+    & subst = ExprSubstitution(expr)
     =>
-    SubstitutionBase(ExprSubstitution(expr)) ~> ctx
+    SubstitutionBase(subst) = ctx
     ;
 Axiom
     VariableExprNode(expr, var)
     & VarTypeInExpr(var, expr) = PolyType(_, sigma)
+    & subst = ExprSubstitution(expr)
+    & expr_ty = ExprType(expr)
     =>
-    Substitute(ExprSubstitution(expr), sigma)
-    ~>
-    ExprType(expr)
+    Substitute(subst, sigma) = expr_ty
     ;
 
-Axiom VoidExprNode(expr) => VoidType() ~> ExprType(expr);
-Axiom FalseExprNode(expr) => BooleanType() ~> ExprType(expr);
-Axiom TrueExprNode(expr) => BooleanType() ~> ExprType(expr);
-Axiom StringLiteralExprNode(expr, _) => StringType() ~> ExprType(expr);
-Axiom NumberLiteralExprNode(expr, _) => NumberType() ~> ExprType(expr);
+Axiom VoidExprNode(expr) & et = ExprType(expr) => et = VoidType();
+Axiom FalseExprNode(expr) & et = ExprType(expr) => et = BooleanType();
+Axiom TrueExprNode(expr) & et = ExprType(expr) => et = BooleanType();
+Axiom StringLiteralExprNode(expr, _) & et = ExprType(expr) => et = StringType();
+Axiom NumberLiteralExprNode(expr, _) & et = ExprType(expr) => et = NumberType();
 
 Axiom
     EqualsExprNode(eq, lhs, rhs)
@@ -966,16 +993,18 @@ Axiom
 Axiom
     FunctionExprNode(expr, _)
     & ctx = ExprTypeContext(expr)
+    & subst = ExprSubstitution(expr)
     =>
-    SubstitutionBase(ExprSubstitution(expr)) ~> ctx
+    SubstitutionBase(subst) = ctx
     ;
 
 Axiom
     FunctionExprNode(expr, func)
+    & subst = ExprSubstitution(expr)
+    & func_ty = FunctionNodeType(func)
+    & expr_ty = ExprType(expr)
     =>
-    Substitute(ExprSubstitution(expr), FunctionNodeType(func))
-    ~>
-    ExprType(expr)
+    Substitute(subst, func_ty) = expr_ty
     ;
 
 // # Type analysis of function definitions
