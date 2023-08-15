@@ -424,12 +424,11 @@ Func MonoType : Type -> GeneralType;
 
 // The type of a function argument is in the context of the arg list of the function.
 Axiom
-    ConsArgListNode(arg_list, head_var, _, tail)
-    // The type of a variable is only in recorded after the variable has been introduced.
-    & MonoType(sigma) = VarTypeInArgList(head_var, tail)
+    ConsArgListNode(arg_list, _, head_ty_node, _)
     & ctx = ArgListContext(arg_list)
+    & head_ty = SemanticOptType(head_ty_node)
     =>
-    TypeInContext(sigma, ctx)
+    TypeInContext(head_ty, ctx)
     ;
 
 // Relate type contexts of node lists with the type contexts of individual nodes in the lists.
