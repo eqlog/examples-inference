@@ -636,7 +636,7 @@ Axiom
 // ArgListNode of a function definition, then the variables listed in args are only in scope for the
 // NilArgListNode at the end of args.
 
-Func PolyType : TypeContext * Type -> GeneralType;
+Func PolyType : Type -> GeneralType;
 // Declared earlier:
 // Func MonoType : Type -> GeneralType;
 Axiom sigma : Type => MonoType(sigma)!;
@@ -667,17 +667,15 @@ Axiom
 Axiom
     ConsStmtListNode(_, head, _)
     & FunctionStmtNode(head, func)
-    & ctx = StmtTypeContext(head)
     & Function(func, _, _, _ ,_)
     =>
-    PolyType(ctx, FunctionNodeType(func))!
+    PolyType(FunctionNodeType(func))!
     ;
 Axiom
     ConsStmtListNode(_, head, tail)
     & FunctionStmtNode(head, func)
-    & ctx = StmtTypeContext(head)
     & Function(func, var, _, _ ,_)
-    & ty = PolyType(ctx, FunctionNodeType(func))
+    & ty = PolyType(FunctionNodeType(func))
     =>
     VarTypeInStmts(var, tail) = ty
     ;
@@ -934,20 +932,21 @@ Axiom VariableExprNode(expr, var) & VarTypeInExpr(var, expr) = MonoType(sigma) =
 
 Axiom
     VariableExprNode(expr, var)
-    & VarTypeInExpr(var, expr) = PolyType(_, _)
+    & VarTypeInExpr(var, expr) = PolyType(_)
     =>
     ExprSubstitution(expr)!
     ;
 Axiom
     VariableExprNode(expr, var)
-    & VarTypeInExpr(var, expr) = PolyType(ctx, _)
+    & VarTypeInExpr(var, expr) = PolyType(_)
     & subst = ExprSubstitution(expr)
+    & ctx = ExprTypeContext(expr)
     =>
     SubstitutionBase(subst) = ctx
     ;
 Axiom
     VariableExprNode(expr, var)
-    & VarTypeInExpr(var, expr) = PolyType(_, sigma)
+    & VarTypeInExpr(var, expr) = PolyType(sigma)
     & subst = ExprSubstitution(expr)
     & expr_ty = ExprType(expr)
     =>
