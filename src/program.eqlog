@@ -547,75 +547,75 @@ Axiom
     ContextExtension(expr_ctx, func_ctx)
     ;
 
-// ## Type substitution.
-Sort Substitution;
+// ## Type instantiation.
+Sort Instantiation;
 
-Func SubstitutionBase : Substitution -> TypeContext;
+Func InstantiationBase : Instantiation -> TypeContext;
 
-Func Substitute : Substitution * Type -> Type;
-Func Substitutes : Substitution * TypeList -> TypeList;
+Func Instantiate : Instantiation * Type -> Type;
+Func InstantiateList : Instantiation * TypeList -> TypeList;
 
 Axiom
-    list_subst = Substitutes(_, NilTypeList())
+    instances = InstantiateList(_, NilTypeList())
     =>
-    list_subst = NilTypeList()
+    instances = NilTypeList()
     ;
 Axiom
-    Substitutes(subst, ConsTypeList(head, tail))!
+    InstantiateList(instance, ConsTypeList(head, tail))!
     =>
-    Substitute(subst, head)!
-    & Substitutes(subst, tail)!
+    Instantiate(instance, head)!
+    & InstantiateList(instance, tail)!
     ;
 
 Axiom
-    head_subst = Substitute(subst, head)
-    & tail_subst = Substitutes(subst, tail)
-    & substs = Substitutes(subst, ConsTypeList(head, tail))
+    head_instance = Instantiate(instance, head)
+    & tail_instance = InstantiateList(instance, tail)
+    & instances = InstantiateList(instance, ConsTypeList(head, tail))
     =>
-    substs = ConsTypeList(head_subst, tail_subst)
+    instances = ConsTypeList(head_instance, tail_instance)
     ;
 
-// ## Substitution laws.
+// ## Instantiation laws.
 Axiom
-    tau = Substitute(subst, sigma)
-    & TypeInContext(sigma, SubstitutionBase(subst))
+    tau = Instantiate(instance, sigma)
+    & TypeInContext(sigma, InstantiationBase(instance))
     =>
     sigma = tau
     ;
 
 Axiom
-    subst_void = Substitute(_, VoidType())
+    instance_void = Instantiate(_, VoidType())
     =>
-    VoidType() = subst_void
+    VoidType() = instance_void
     ;
 Axiom
-    subst_boolean = Substitute(_, BooleanType())
+    instance_boolean = Instantiate(_, BooleanType())
     =>
-    BooleanType() = subst_boolean
+    BooleanType() = instance_boolean
     ;
 Axiom
-    subst_number = Substitute(_, NumberType())
+    instance_number = Instantiate(_, NumberType())
     =>
-    NumberType() = subst_number
+    NumberType() = instance_number
     ;
 Axiom
-    subst_string = Substitute(_, StringType())
+    instance_string = Instantiate(_, StringType())
     =>
-    StringType() = subst_string
+    StringType() = instance_string
     ;
 
 Axiom
-    Substitute(subst, FunctionType(dom, cod))!
+    Instantiate(instance, FunctionType(dom, cod))!
     =>
-    Substitutes(subst, dom)!
-    & Substitute(subst, cod)!
+    InstantiateList(instance, dom)!
+    & Instantiate(instance, cod)!
     ;
 Axiom
-    dom_substs = Substitutes(subst, dom)
-    & cod_subst = Substitute(subst, cod)
-    & func_subst = Substitute(subst, FunctionType(dom, cod))
+    dom_instances = InstantiateList(instance, dom)
+    & cod_instance = Instantiate(instance, cod)
+    & func_instance = Instantiate(instance, FunctionType(dom, cod))
     =>
-    FunctionType(dom_substs, cod_subst) = func_subst
+    FunctionType(dom_instances, cod_instance) = func_instance
     ;
 
 
@@ -891,9 +891,9 @@ Axiom
 //   Func ExprType : ExprNode -> Type;
 //   Func ExprTypes : ExprListNode -> TypeList;
 
-// The substitutions associated to expressions with PolyTypes that must be instantiated into
+// The instances associated to expressions with PolyTypes that must be instantiated into
 // MonoTypes.
-Func ExprSubstitution : ExprNode -> Substitution;
+Func ExprInstantiation : ExprNode -> Instantiation;
 
 // Both ExprType and ExprTypes are total. Our axioms enforce that ExprTypes is given by mapping
 // ExprType on each ExprNode element.
@@ -934,23 +934,23 @@ Axiom
     VariableExprNode(expr, var)
     & VarTypeInExpr(var, expr) = PolyType(_)
     =>
-    ExprSubstitution(expr)!
+    ExprInstantiation(expr)!
     ;
 Axiom
     VariableExprNode(expr, var)
     & VarTypeInExpr(var, expr) = PolyType(_)
-    & subst = ExprSubstitution(expr)
+    & instance = ExprInstantiation(expr)
     & ctx = ExprTypeContext(expr)
     =>
-    SubstitutionBase(subst) = ctx
+    InstantiationBase(instance) = ctx
     ;
 Axiom
     VariableExprNode(expr, var)
     & VarTypeInExpr(var, expr) = PolyType(sigma)
-    & subst = ExprSubstitution(expr)
+    & instance = ExprInstantiation(expr)
     & expr_ty = ExprType(expr)
     =>
-    Substitute(subst, sigma) = expr_ty
+    Instantiate(instance, sigma) = expr_ty
     ;
 
 Axiom VoidExprNode(expr) & et = ExprType(expr) => et = VoidType();
@@ -986,23 +986,23 @@ Axiom
 Axiom
     FunctionExprNode(expr, _)
     =>
-    ExprSubstitution(expr)!
+    ExprInstantiation(expr)!
     ;
 Axiom
     FunctionExprNode(expr, _)
     & ctx = ExprTypeContext(expr)
-    & subst = ExprSubstitution(expr)
+    & instance = ExprInstantiation(expr)
     =>
-    SubstitutionBase(subst) = ctx
+    InstantiationBase(instance) = ctx
     ;
 
 Axiom
     FunctionExprNode(expr, func)
-    & subst = ExprSubstitution(expr)
+    & instance = ExprInstantiation(expr)
     & func_ty = FunctionNodeType(func)
     & expr_ty = ExprType(expr)
     =>
-    Substitute(subst, func_ty) = expr_ty
+    Instantiate(instance, func_ty) = expr_ty
     ;
 
 // # Type analysis of function definitions
