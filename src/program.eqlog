@@ -550,7 +550,7 @@ Axiom
 // ## Type instantiation.
 Sort Instantiation;
 
-Func InstantiationBase : Instantiation -> TypeContext;
+Func InstantiationTarget : Instantiation -> TypeContext;
 
 Func Instantiate : Instantiation * Type -> Type;
 Func InstantiateList : Instantiation * TypeList -> TypeList;
@@ -578,7 +578,7 @@ Axiom
 // ## Instantiation laws.
 Axiom
     tau = Instantiate(instance, sigma)
-    & TypeInContext(sigma, InstantiationBase(instance))
+    & TypeInContext(sigma, InstantiationTarget(instance))
     =>
     sigma = tau
     ;
@@ -942,7 +942,7 @@ Axiom
     & instance = ExprInstantiation(expr)
     & ctx = ExprTypeContext(expr)
     =>
-    InstantiationBase(instance) = ctx
+    InstantiationTarget(instance) = ctx
     ;
 Axiom
     VariableExprNode(expr, var)
@@ -993,7 +993,7 @@ Axiom
     & ctx = ExprTypeContext(expr)
     & instance = ExprInstantiation(expr)
     =>
-    InstantiationBase(instance) = ctx
+    InstantiationTarget(instance) = ctx
     ;
 
 Axiom
