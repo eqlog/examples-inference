@@ -983,26 +983,13 @@ Axiom
     & res_ty = CodomainType(func_ty)
     ;
 
-Axiom
-    FunctionExprNode(expr, _)
-    =>
-    ExprInstantiation(expr)!
-    ;
-Axiom
-    FunctionExprNode(expr, _)
-    & ctx = ExprTypeContext(expr)
-    & instance = ExprInstantiation(expr)
-    =>
-    InstantiationTarget(instance) = ctx
-    ;
-
+// No need to instantiate the type of a function expression: Since it would be instantiated only
+// once anyway, we can directly equate the function node type with the expression type.
 Axiom
     FunctionExprNode(expr, func)
-    & instance = ExprInstantiation(expr)
     & func_ty = FunctionNodeType(func)
-    & expr_ty = ExprType(expr)
     =>
-    Instantiate(instance, func_ty) = expr_ty
+    ExprType(expr) = func_ty
     ;
 
 // # Type analysis of function definitions
