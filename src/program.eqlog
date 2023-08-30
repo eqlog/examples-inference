@@ -1,221 +1,271 @@
-Pred VariableShadowing: ();
-Pred ConflictingTypes: ();
+pred VariableShadowing();
+pred ConflictingTypes();
 
 // # The AST, encoded algebraically/relationally.
-Sort ModuleNode;
+type ModuleNode;
 
-Sort TypeNode;
-Sort OptTypeNode;
+type TypeNode;
+type OptTypeNode;
 
-Sort ExprNode;
-Sort ExprListNode;
+type ExprNode;
+type ExprListNode;
 
-Sort StmtNode;
-Sort StmtListNode;
+type StmtNode;
+type StmtListNode;
 
-Sort FunctionNode;
+type FunctionNode;
 
-Sort Var;
-Sort StringLiteral;
-Sort NumberLiteral;
+type Var;
+type StringLiteral;
+type NumberLiteral;
 
-Sort ArgListNode;
+type ArgListNode;
 
 // Module(node, top_lvl_stmts)
-Pred Module : ModuleNode * StmtListNode;
+pred Module(ModuleNode, StmtListNode);
 
-Pred VoidTypeNode : TypeNode;
-Pred BooleanTypeNode : TypeNode;
-Pred NumberTypeNode : TypeNode;
-Pred StringTypeNode : TypeNode;
+pred VoidTypeNode(TypeNode);
+pred BooleanTypeNode(TypeNode);
+pred NumberTypeNode(TypeNode);
+pred StringTypeNode(TypeNode);
 // FunctionTypeNode(node, domain, codomain)
-Pred FunctionTypeNode : TypeNode * ArgListNode * TypeNode;
+pred FunctionTypeNode(TypeNode, ArgListNode, TypeNode);
 
-Pred VariableExprNode : ExprNode * Var;
-Pred VoidExprNode : ExprNode;
-Pred FalseExprNode : ExprNode;
-Pred TrueExprNode : ExprNode;
-Pred StringLiteralExprNode : ExprNode * StringLiteral;
-Pred NumberLiteralExprNode : ExprNode * NumberLiteral;
-Pred EqualsExprNode : ExprNode * ExprNode * ExprNode;
+pred VariableExprNode(ExprNode, Var);
+pred VoidExprNode(ExprNode);
+pred FalseExprNode(ExprNode);
+pred TrueExprNode(ExprNode);
+pred StringLiteralExprNode(ExprNode, StringLiteral);
+pred NumberLiteralExprNode(ExprNode, NumberLiteral);
+pred EqualsExprNode(ExprNode, ExprNode, ExprNode);
 // AppExprNode(node, func, args)
-Pred AppExprNode : ExprNode * ExprNode * ExprListNode;
-Pred FunctionExprNode : ExprNode * FunctionNode;
+pred AppExprNode(ExprNode, ExprNode, ExprListNode);
+pred FunctionExprNode(ExprNode, FunctionNode);
 
-Pred ExprStmtNode : StmtNode * ExprNode;
+pred ExprStmtNode(StmtNode, ExprNode);
 // LetStmtNode(node, var, initial_value)
-Pred LetStmtNode : StmtNode * Var * OptTypeNode * ExprNode;
+pred LetStmtNode(StmtNode, Var, OptTypeNode, ExprNode);
 // ReturnStmtNode(node, return_value)
-Pred ReturnStmtNode : StmtNode * ExprNode;
-Pred ReturnVoidStmtNode : StmtNode;
-Pred FunctionStmtNode : StmtNode * FunctionNode;
+pred ReturnStmtNode(StmtNode, ExprNode);
+pred ReturnVoidStmtNode(StmtNode);
+pred FunctionStmtNode(StmtNode, FunctionNode);
 // IfStmtNode(node, condition, true_branch, false_branch)
-Pred IfStmtNode : StmtNode * ExprNode * StmtListNode * StmtListNode;
+pred IfStmtNode(StmtNode, ExprNode, StmtListNode, StmtListNode);
 // WhileStmtNode(node, condition, body)
-Pred WhileStmtNode : StmtNode * ExprNode * StmtListNode;
+pred WhileStmtNode(StmtNode, ExprNode, StmtListNode);
 
 // Function(node, function_name, domain, codomain, body)
-Pred Function : FunctionNode * Var * ArgListNode * OptTypeNode * StmtListNode;
+pred Function(FunctionNode, Var, ArgListNode, OptTypeNode, StmtListNode);
 
 // ## <Sort>NodeList operators.
-Pred NilExprListNode : ExprListNode;
-Pred ConsExprListNode : ExprListNode * ExprNode * ExprListNode;
+pred NilExprListNode(ExprListNode);
+pred ConsExprListNode(ExprListNode, ExprNode, ExprListNode);
 
-Pred NilStmtListNode : StmtListNode;
-Pred ConsStmtListNode : StmtListNode * StmtNode * StmtListNode;
+pred NilStmtListNode(StmtListNode);
+pred ConsStmtListNode(StmtListNode, StmtNode, StmtListNode);
 
 // ## ArgListNode operators.
-Pred NilArgListNode : ArgListNode;
-Pred ConsArgListNode : ArgListNode * Var * OptTypeNode * ArgListNode;
+pred NilArgListNode(ArgListNode);
+pred ConsArgListNode(ArgListNode, Var, OptTypeNode, ArgListNode);
 
 // ## OptTypeNode operators.
-Pred NoneOptTypeNode : OptTypeNode;
-Pred SomeOptTypeNode : OptTypeNode * TypeNode;
+pred NoneOptTypeNode(OptTypeNode);
+pred SomeOptTypeNode(OptTypeNode, TypeNode);
 
 
 // # Semantic types.
 
 // ## Simple (i.e. mono) types.
-Sort Type;
-Sort TypeList;
+type Type;
+type TypeList;
 
 // ## Semantic type operators.
-Func VoidType : Type;
-Func BooleanType : Type;
-Func NumberType : Type;
-Func StringType : Type;
+func VoidType() -> Type;
+func BooleanType() -> Type;
+func NumberType() -> Type;
+func StringType() -> Type;
 // FunctionType(node, domain, codomain)
-Func FunctionType : TypeList * Type -> Type;
+func FunctionType(TypeList, Type) -> Type;
 // Inverses to FunctionType:
 // - DomainTypes(FunctionType(domain, _)) = domain
 // - CodomainType(FunctionType(_, codomain)) = codomain
-Func DomainTypes : Type -> TypeList;
-Func CodomainType : Type -> Type;
+func DomainTypes(Type) -> TypeList;
+func CodomainType(Type) -> Type;
 
-Axiom DomainTypes(tau)! => CodomainType(tau)!;
-Axiom CodomainType(tau)! => DomainTypes(tau)!;
-Axiom
-    kappa = FunctionType(sigmas, tau)
-    =>
-    DomainTypes(kappa) = sigmas
-    & CodomainType(kappa) = tau
-    ;
-Axiom
-    sigmas = DomainTypes(kappa)
-    & tau = CodomainType(kappa)
-    =>
-    FunctionType(sigmas, tau) = kappa
-    ;
+rule {
+  if DomainTypes(tau)!;
+  then CodomainType(tau)!;
+}
+rule {
+  if CodomainType(tau)!;
+  then DomainTypes(tau)!;
+}
+rule {
+  if kappa = FunctionType(sigmas, tau);
+  then DomainTypes(kappa) = sigmas;
+  then CodomainType(kappa) = tau;
+}
+rule {
+  if sigmas = DomainTypes(kappa);
+  if tau = CodomainType(kappa);
+  then FunctionType(sigmas, tau) = kappa;
+}
 
 // ## TypeList operators.
 // We're equating TypeList elements sometimes. In well-typed programs, this is only possible if the
 // type lists have the same length and are made up of the same Types.
-Func NilTypeList : TypeList;
-Func ConsTypeList : Type * TypeList -> TypeList;
-Axiom NilTypeList() = ConsTypeList(_, _) => ConflictingTypes();
-Axiom ConsTypeList(head_0, tail_0) = ConsTypeList(head_1, tail_1) => head_0 = head_1 & tail_0 = tail_1;
+func NilTypeList() -> TypeList;
+func ConsTypeList(Type, TypeList) -> TypeList;
+rule {
+  if NilTypeList() = ConsTypeList(_, _);
+  then ConflictingTypes();
+}
+rule {
+  if ConsTypeList(head_0, tail_0) = ConsTypeList(head_1, tail_1);
+  then head_0 = head_1;
+  then tail_0 = tail_1;
+}
 
 // ## Joint injectivity of type operators.
-Axiom VoidType() = BooleanType() => ConflictingTypes();
-Axiom VoidType() = NumberType() => ConflictingTypes();
-Axiom VoidType() = StringType() => ConflictingTypes();
-Axiom VoidType() = FunctionType(_, _) => ConflictingTypes();
+rule {
+  if VoidType() = BooleanType();
+  then ConflictingTypes();
+}
+rule {
+  if VoidType() = NumberType();
+  then ConflictingTypes();
+}
+rule {
+  if VoidType() = StringType();
+  then ConflictingTypes();
+}
+rule {
+  if VoidType() = FunctionType(_, _);
+  then ConflictingTypes();
+}
 
-Axiom BooleanType() = NumberType() => ConflictingTypes();
-Axiom BooleanType() = StringType() => ConflictingTypes();
-Axiom BooleanType() = FunctionType(_, _) => ConflictingTypes();
+rule {
+  if BooleanType() = NumberType();
+  then ConflictingTypes();
+}
+rule {
+  if BooleanType() = StringType();
+  then ConflictingTypes();
+}
+rule {
+  if BooleanType() = FunctionType(_, _);
+  then ConflictingTypes();
+}
 
-Axiom NumberType() = StringType() => ConflictingTypes();
-Axiom NumberType() = FunctionType(_, _) => ConflictingTypes();
+rule {
+  if NumberType() = StringType();
+  then ConflictingTypes();
+}
+rule {
+  if NumberType() = FunctionType(_, _);
+  then ConflictingTypes();
+}
 
-Axiom StringType() = FunctionType(_, _) => ConflictingTypes();
+rule {
+  if StringType() = FunctionType(_, _);
+  then ConflictingTypes();
+}
 
-Axiom
-    FunctionType(domain_0, codomain_0) = FunctionType(domain_1, codomain_1)
-    =>
-    domain_0 = domain_1
-    & codomain_0 = codomain_1
-    ;
+rule {
+  if FunctionType(domain_0, codomain_0) = FunctionType(domain_1, codomain_1);
+  then domain_0 = domain_1;
+  then codomain_0 = codomain_1;
+}
 
 // ## Functions assigning to node elements their corresponding semantic Type elements.
-Func SemanticType : TypeNode -> Type;
-Func SemanticOptType : OptTypeNode -> Type;
-Func SemanticArgTypes : ArgListNode -> TypeList;
+func SemanticType(TypeNode) -> Type;
+func SemanticOptType(OptTypeNode) -> Type;
+func SemanticArgTypes(ArgListNode) -> TypeList;
 
 // The types of expressions and function literals:
-Func ExprType : ExprNode -> Type;
-Func ExprTypes : ExprListNode -> TypeList;
-Func FunctionNodeType : FunctionNode -> Type;
+func ExprType(ExprNode) -> Type;
+func ExprTypes(ExprListNode) -> TypeList;
+func FunctionNodeType(FunctionNode) -> Type;
 
 // All of the functions into Type that we've just declared are total.
-Axiom tn: TypeNode => SemanticType(tn)!;
-Axiom otn: OptTypeNode => SemanticOptType(otn)!;
-Axiom agn: ArgListNode => SemanticArgTypes(agn)!;
-Axiom en: ExprNode => ExprType(en)!;
-Axiom eln: ExprListNode => ExprTypes(eln)!;
-Axiom fcn: FunctionNode => FunctionNodeType(fcn)!;
+rule {
+  if tn: TypeNode;
+  then SemanticType(tn)!;
+}
+rule {
+  if otn: OptTypeNode;
+  then SemanticOptType(otn)!;
+}
+rule {
+  if agn: ArgListNode;
+  then SemanticArgTypes(agn)!;
+}
+rule {
+  if en: ExprNode;
+  then ExprType(en)!;
+}
+rule {
+  if eln: ExprListNode;
+  then ExprTypes(eln)!;
+}
+rule {
+  if fcn: FunctionNode;
+  then FunctionNodeType(fcn)!;
+}
 
 // Since SemanticType is total, these rules will fire for all TypeNodes.
-Axiom
-    VoidTypeNode(tn)
-    & sigma = SemanticType(tn)
-    =>
-    VoidType() = sigma
-    ;
-Axiom
-    BooleanTypeNode(tn)
-    & sigma = SemanticType(tn)
-    =>
-    BooleanType() = sigma
-    ;
-Axiom
-    NumberTypeNode(tn)
-    & sigma = SemanticType(tn)
-    =>
-    NumberType() = sigma
-    ;
-Axiom
-    StringTypeNode(tn)
-    & sigma = SemanticType(tn)
-    =>
-    StringType() = sigma
-    ;
+rule {
+  if VoidTypeNode(tn);
+  if sigma = SemanticType(tn);
+  then VoidType() = sigma;
+}
+rule {
+  if BooleanTypeNode(tn);
+  if sigma = SemanticType(tn);
+  then BooleanType() = sigma;
+}
+rule {
+  if NumberTypeNode(tn);
+  if sigma = SemanticType(tn);
+  then NumberType() = sigma;
+}
+rule {
+  if StringTypeNode(tn);
+  if sigma = SemanticType(tn);
+  then StringType() = sigma;
+}
 
 // Other axioms assert that SemanticArgTypes and SemanticType are total functions, so this rule
 // will fire for al FunctionTypeNodes.
-Axiom
-    FunctionTypeNode(tn, args, codomain)
-    & dom_types = SemanticArgTypes(args)
-    & cod_type = SemanticType(codomain)
-    & function_type = SemanticType(tn)
-    =>
-    FunctionType(dom_types, cod_type) = function_type
-    ;
+rule {
+  if FunctionTypeNode(tn, args, codomain);
+  if dom_types = SemanticArgTypes(args);
+  if cod_type = SemanticType(codomain);
+  if function_type = SemanticType(tn);
+  then FunctionType(dom_types, cod_type) = function_type;
+}
 
 // SemanticOptType is total, but only for SomeOptTypeNode elements does it have a determined type.
 // If no other rules apply, it will be an opaque Type element determined only by the OptTypeNode
 // element.
-Axiom
-    SomeOptTypeNode(otn, tn)
-    & sigma = SemanticType(tn)
-    =>
-    SemanticOptType(otn) = sigma
-    ;
+rule {
+  if SomeOptTypeNode(otn, tn);
+  if sigma = SemanticType(tn);
+  then SemanticOptType(otn) = sigma;
+}
 
-Axiom
-    NilArgListNode(al)
-    & semantic_types = SemanticArgTypes(al)
-    =>
-    NilTypeList() = semantic_types
-    ;
-Axiom
-    ConsArgListNode(al, _, head_type, tail)
-    & semantic_head = SemanticOptType(head_type)
-    & semantic_tail = SemanticArgTypes(tail)
-    & semantic_types = SemanticArgTypes(al)
-    =>
-    semantic_types = ConsTypeList(semantic_head, semantic_tail)
-    ;
+rule {
+  if NilArgListNode(al);
+  if semantic_types = SemanticArgTypes(al);
+  then NilTypeList() = semantic_types;
+}
+rule {
+  if ConsArgListNode(al, _, head_type, tail);
+  if semantic_head = SemanticOptType(head_type);
+  if semantic_tail = SemanticArgTypes(tail);
+  if semantic_types = SemanticArgTypes(al);
+  then semantic_types = ConsTypeList(semantic_head, semantic_tail);
+}
 
 // ## Determined types, i.e. those that do not contain unsolved type variables.
 //
@@ -243,55 +293,64 @@ Axiom
 // Here `foo`  has type `forall a. () -> a`. Thus, `x` must  be simple type, but it can be any
 // simple type: The type of `x` is not determined.
 
-Pred DeterminedType : Type;
-Pred DeterminedTypes : TypeList;
+pred DeterminedType(Type);
+pred DeterminedTypes(TypeList);
 
 // A type list is determined if all of the types it contains are determined.
-Axiom sigmas = NilTypeList() => DeterminedTypes(sigmas);
-Axiom
-    sigmas = ConsTypeList(head, tail)
-    & DeterminedType(head)
-    & DeterminedTypes(tail)
-    =>
-    DeterminedTypes(sigmas)
-    ;
+rule {
+  if sigmas = NilTypeList();
+  then DeterminedTypes(sigmas);
+}
+rule {
+  if sigmas = ConsTypeList(head, tail);
+  if DeterminedType(head);
+  if DeterminedTypes(tail);
+  then DeterminedTypes(sigmas);
+}
 
-Axiom sigma = VoidType() => DeterminedType(sigma);
-Axiom sigma = BooleanType() => DeterminedType(sigma);
-Axiom sigma = NumberType() => DeterminedType(sigma);
-Axiom sigma = StringType() => DeterminedType(sigma);
-Axiom
-    sigma = FunctionType(dom, cod)
-    & DeterminedTypes(dom)
-    & DeterminedType(cod)
-    =>
-    DeterminedType(sigma)
-    ;
-Axiom
-    sigmas = DomainTypes(kappa)
-    & DeterminedType(kappa)
-    =>
-    DeterminedTypes(sigmas)
-    ;
-Axiom
-    tau = CodomainType(kappa)
-    & DeterminedType(kappa)
-    =>
-    DeterminedType(tau)
-    ;
+rule {
+  if sigma = VoidType();
+  then DeterminedType(sigma);
+}
+rule {
+  if sigma = BooleanType();
+  then DeterminedType(sigma);
+}
+rule {
+  if sigma = NumberType();
+  then DeterminedType(sigma);
+}
+rule {
+  if sigma = StringType();
+  then DeterminedType(sigma);
+}
+rule {
+  if sigma = FunctionType(dom, cod);
+  if DeterminedTypes(dom);
+  if DeterminedType(cod);
+  then DeterminedType(sigma);
+}
+rule {
+  if sigmas = DomainTypes(kappa);
+  if DeterminedType(kappa);
+  then DeterminedTypes(sigmas);
+}
+rule {
+  if tau = CodomainType(kappa);
+  if DeterminedType(kappa);
+  then DeterminedType(tau);
+}
 
-Axiom
-    ConsArgListNode(_, _, otn, _)
-    & t = SemanticOptType(otn)
-    =>
-    DeterminedType(t)
-    ;
-Axiom
-    Function(_, _, _, codomain_otn, _)
-    & t = SemanticOptType(codomain_otn)
-    =>
-    DeterminedType(t)
-    ;
+rule {
+  if ConsArgListNode(_, _, otn, _);
+  if t = SemanticOptType(otn);
+  then DeterminedType(t);
+}
+rule {
+  if Function(_, _, _, codomain_otn, _);
+  if t = SemanticOptType(codomain_otn);
+  then DeterminedType(t);
+}
 
 // ## Well-founded types
 //
@@ -307,316 +366,324 @@ Axiom
 // strictly smaller than tau.  If we find that a type must be structurally smaller than itself,
 // then we generate an error.
 
-Pred SmallerType : Type * Type;
-Axiom SmallerType(sigma, tau) & SmallerType(tau, kappa) => SmallerType(sigma, kappa);
+pred SmallerType(Type, Type);
+rule {
+  if SmallerType(sigma, tau);
+  if SmallerType(tau, kappa);
+  then SmallerType(sigma, kappa);
+}
 
-Axiom SmallerType(sigma, sigma) => ConflictingTypes();
+rule {
+  if SmallerType(sigma, sigma);
+  then ConflictingTypes();
+}
 
 // SmallerTypes(sigmas, tau) <=> forall sigma in sigma. SmallerType(sigma, tau)
-Pred SmallerTypes : TypeList * Type;
-Axiom sigmas = NilTypeList() & tau : Type => SmallerTypes(sigmas, tau);
-Axiom
-    SmallerTypes(ConsTypeList(head, tail), tau)
-    =>
-    SmallerType(head, tau)
-    & SmallerTypes(tail, tau)
-    ;
-Axiom
-    SmallerType(head, tau)
-    & SmallerTypes(tail, tau)
-    & sigmas = ConsTypeList(head, tail)
-    =>
-    SmallerTypes(sigmas, tau)
-    ;
+pred SmallerTypes(TypeList, Type);
+rule {
+  if sigmas = NilTypeList();
+  if tau: Type;
+  then SmallerTypes(sigmas, tau);
+}
+rule {
+  if SmallerTypes(ConsTypeList(head, tail), tau);
+  then SmallerType(head, tau);
+  then SmallerTypes(tail, tau);
+}
+rule {
+  if SmallerType(head, tau);
+  if SmallerTypes(tail, tau);
+  if sigmas = ConsTypeList(head, tail);
+  then SmallerTypes(sigmas, tau);
+}
 
 // All domain types and the codomain of a function type are smaller than the function type.
-Axiom kappa = FunctionType(sigmas, tau) => SmallerTypes(sigmas, kappa) & SmallerType(tau, kappa);
+rule {
+  if kappa = FunctionType(sigmas, tau);
+  then SmallerTypes(sigmas, kappa);
+  then SmallerType(tau, kappa);
+}
 
 // # Type contexts.
-Sort TypeContext;
+type TypeContext;
 
-Pred TypeInContext : Type * TypeContext;
-Pred TypesInContext : TypeList * TypeContext;
+pred TypeInContext(Type, TypeContext);
+pred TypesInContext(TypeList, TypeContext);
 
-Axiom gamma : TypeContext & NilTypeList()! => TypesInContext(NilTypeList(), gamma);
-Axiom
-    sigmas = ConsTypeList(sigmas_head, sigmas_tail)
-    & TypeInContext(sigmas_head, gamma)
-    & TypesInContext(sigmas_tail, gamma)
-    =>
-    TypesInContext(sigmas, gamma)
-    ;
+rule {
+  if gamma: TypeContext;
+  if NilTypeList()!;
+  then TypesInContext(NilTypeList(), gamma);
+}
+rule {
+  if sigmas = ConsTypeList(sigmas_head, sigmas_tail);
+  if TypeInContext(sigmas_head, gamma);
+  if TypesInContext(sigmas_tail, gamma);
+  then TypesInContext(sigmas, gamma);
+}
 
-Axiom
-    & TypesInContext(ConsTypeList(head, tail), gamma)
-    =>
-    TypeInContext(head, gamma)
-    & TypesInContext(tail, gamma)
-    ;
+rule {
+  if TypesInContext(ConsTypeList(head, tail), gamma);
+  then TypeInContext(head, gamma);
+  then TypesInContext(tail, gamma);
+}
 
-Pred ContextExtension : TypeContext * TypeContext;
-Axiom
-    ContextExtension(gamma_0, gamma_1)
-    & TypeInContext(sigma, gamma_0)
-    =>
-    TypeInContext(sigma, gamma_1)
-    ;
+pred ContextExtension(TypeContext, TypeContext);
+rule {
+  if ContextExtension(gamma_0, gamma_1);
+  if TypeInContext(sigma, gamma_0);
+  then TypeInContext(sigma, gamma_1);
+}
 
 // ## Type contexts are closed under type formers and their inverses.
-Axiom
-    TypeInContext(FunctionType(dom, cod), gamma)
-    =>
-    TypesInContext(dom, gamma)
-    & TypeInContext(cod, gamma)
-    ;
-Axiom
-    kappa = FunctionType(dom, cod)
-    & TypesInContext(dom, gamma)
-    & TypeInContext(cod, gamma)
-    =>
-    TypeInContext(kappa, gamma)
-    ;
+rule {
+  if TypeInContext(FunctionType(dom, cod), gamma);
+  then TypesInContext(dom, gamma);
+  then TypeInContext(cod, gamma);
+}
+rule {
+  if kappa = FunctionType(dom, cod);
+  if TypesInContext(dom, gamma);
+  if TypeInContext(cod, gamma);
+  then TypeInContext(kappa, gamma);
+}
 
-Axiom
-    gamma : TypeContext
-    & sigma = VoidType()
-    =>
-    TypeInContext(sigma, gamma);
-Axiom
-    gamma : TypeContext
-    & sigma = BooleanType()
-    =>
-    TypeInContext(sigma, gamma);
-Axiom
-    gamma : TypeContext
-    & sigma = NumberType()
-    =>
-    TypeInContext(sigma, gamma);
-Axiom
-    gamma : TypeContext
-    & sigma = StringType()
-    =>
-    TypeInContext(sigma, gamma);
+rule {
+  if gamma: TypeContext;
+  if sigma = VoidType();
+  then TypeInContext(sigma, gamma);
+}
+rule {
+  if gamma: TypeContext;
+  if sigma = BooleanType();
+  then TypeInContext(sigma, gamma);
+}
+rule {
+  if gamma: TypeContext;
+  if sigma = NumberType();
+  then TypeInContext(sigma, gamma);
+}
+rule {
+  if gamma: TypeContext;
+  if sigma = StringType();
+  then TypeInContext(sigma, gamma);
+}
 
 // ## The type contexts associated with expressions and statements.
-Func ModuleTypeContext : ModuleNode -> TypeContext;
-Func FunctionTypeContext : FunctionNode -> TypeContext;
-Func ArgListContext: ArgListNode -> TypeContext;
-Func StmtTypeContext : StmtNode -> TypeContext;
-Func StmtsTypeContext : StmtListNode -> TypeContext;
-Func ExprTypeContext : ExprNode -> TypeContext;
-Func ExprsTypeContext : ExprListNode -> TypeContext;
+func ModuleTypeContext(ModuleNode) -> TypeContext;
+func FunctionTypeContext(FunctionNode) -> TypeContext;
+func ArgListContext(ArgListNode) -> TypeContext;
+func StmtTypeContext(StmtNode) -> TypeContext;
+func StmtsTypeContext(StmtListNode) -> TypeContext;
+func ExprTypeContext(ExprNode) -> TypeContext;
+func ExprsTypeContext(ExprListNode) -> TypeContext;
 
-Axiom mn : ModuleNode => ModuleTypeContext(mn)!;
-Axiom fn : FunctionNode => FunctionTypeContext(fn)!;
-Axiom args : ArgListNode => ArgListContext(args)!;
-Axiom stmt : StmtNode => StmtTypeContext(stmt)!;
-Axiom stmts : StmtListNode => StmtsTypeContext(stmts)!;
-Axiom expr : ExprNode => ExprTypeContext(expr)!;
-Axiom exprs : ExprListNode => ExprsTypeContext(exprs)!;
+rule {
+  if mn: ModuleNode;
+  then ModuleTypeContext(mn)!;
+}
+rule {
+  if fn: FunctionNode;
+  then FunctionTypeContext(fn)!;
+}
+rule {
+  if args: ArgListNode;
+  then ArgListContext(args)!;
+}
+rule {
+  if stmt: StmtNode;
+  then StmtTypeContext(stmt)!;
+}
+rule {
+  if stmts: StmtListNode;
+  then StmtsTypeContext(stmts)!;
+}
+rule {
+  if expr: ExprNode;
+  then ExprTypeContext(expr)!;
+}
+rule {
+  if exprs: ExprListNode;
+  then ExprsTypeContext(exprs)!;
+}
 
 // ## Populating the TypeInContext predicate.
 
 // Forward declarations.
-Sort GeneralType;
-Func VarTypeInArgList : Var * ArgListNode -> GeneralType;
-Func MonoType : Type -> GeneralType;
+type GeneralType;
+func VarTypeInArgList(Var, ArgListNode) -> GeneralType;
+func MonoType(Type) -> GeneralType;
 
 // The type of a function argument is in the context of the arg list of the function.
-Axiom
-    ConsArgListNode(arg_list, _, head_ty_node, _)
-    & ctx = ArgListContext(arg_list)
-    & head_ty = SemanticOptType(head_ty_node)
-    =>
-    TypeInContext(head_ty, ctx)
-    ;
+rule {
+  if ConsArgListNode(arg_list, _, head_ty_node, _);
+  if ctx = ArgListContext(arg_list);
+  if head_ty = SemanticOptType(head_ty_node);
+  then TypeInContext(head_ty, ctx);
+}
 
 // Relate type contexts of node lists with the type contexts of individual nodes in the lists.
-Axiom
-    ConsArgListNode(al, _, _, tail)
-    & ArgListContext(al) = ctx
-    =>
-    & ArgListContext(tail) = ctx
-    ;
-Axiom
-    ConsStmtListNode(stmts, head, tail)
-    & StmtsTypeContext(stmts) = ctx
-    =>
-    StmtTypeContext(head) = ctx
-    & StmtsTypeContext(tail) = ctx
-    ;
-Axiom
-    ConsExprListNode(stmts, head, tail)
-    & ExprsTypeContext(stmts) = ctx
-    =>
-    ExprTypeContext(head) = ctx
-    & ExprsTypeContext(tail) = ctx
-    ;
+rule {
+  if ConsArgListNode(al, _, _, tail);
+  if ArgListContext(al) = ctx;
+  then ArgListContext(tail) = ctx;
+}
+rule {
+  if ConsStmtListNode(stmts, head, tail);
+  if StmtsTypeContext(stmts) = ctx;
+  then StmtTypeContext(head) = ctx;
+  then StmtsTypeContext(tail) = ctx;
+}
+rule {
+  if ConsExprListNode(stmts, head, tail);
+  if ExprsTypeContext(stmts) = ctx;
+  then ExprTypeContext(head) = ctx;
+  then ExprsTypeContext(tail) = ctx;
+}
 
 // Module type contexts propagate into top level statements.
-Axiom
-    Module(mn, stmts)
-    & ctx = ModuleTypeContext(mn)
-    =>
-    StmtsTypeContext(stmts) = ctx
-    ;
+rule {
+  if Module(mn, stmts);
+  if ctx = ModuleTypeContext(mn);
+  then StmtsTypeContext(stmts) = ctx;
+}
 
 // Function type contexts propagate into bodies.
-Axiom
-    Function(fn, _, arg_list, _, stmts)
-    & ctx = FunctionTypeContext(fn)
-    =>
-    StmtsTypeContext(stmts) = ctx
-    & ArgListContext(arg_list) = ctx
-    ;
+rule {
+  if Function(fn, _, arg_list, _, stmts);
+  if ctx = FunctionTypeContext(fn);
+  then StmtsTypeContext(stmts) = ctx;
+  then ArgListContext(arg_list) = ctx;
+}
 
 // ## Propagate type contexts through statements.
-Axiom
-    ExprStmtNode(stmt, expr)
-    & ctx = StmtTypeContext(stmt)
-    =>
-    ExprTypeContext(expr) = ctx
-    ;
-Axiom
-    LetStmtNode(stmt, _, _, expr)
-    & ctx = StmtTypeContext(stmt)
-    =>
-    ExprTypeContext(expr) = ctx
-    ;
-Axiom
-    ReturnStmtNode(stmt, expr)
-    & ctx = StmtTypeContext(stmt)
-    =>
-    ExprTypeContext(expr) = ctx
-    ;
-Axiom
-    FunctionStmtNode(stmt, func)
-    & ambient_ctx = StmtTypeContext(stmt)
-    & func_ctx = FunctionTypeContext(func)
-    =>
-    ContextExtension(ambient_ctx, func_ctx)
-    ;
-Axiom
-    IfStmtNode(stmt, cond, true_branch, false_branch)
-    & stmt_ctx = StmtTypeContext(stmt)
-    & cond_ctx = ExprTypeContext(cond)
-    & true_branch_ctx = StmtsTypeContext(true_branch)
-    & false_branch_ctx = StmtsTypeContext(false_branch)
-    =>
-    stmt_ctx = cond_ctx
-    & cond_ctx = true_branch_ctx
-    & true_branch_ctx = false_branch_ctx
-    ;
-Axiom
-    WhileStmtNode(stmt, cond, body)
-    & stmt_ctx = StmtTypeContext(stmt)
-    & cond_ctx = ExprTypeContext(cond)
-    & body_ctx = StmtsTypeContext(body)
-    =>
-    stmt_ctx = cond_ctx
-    & cond_ctx = body_ctx
-    ;
+rule {
+  if ExprStmtNode(stmt, expr);
+  if ctx = StmtTypeContext(stmt);
+  then ExprTypeContext(expr) = ctx;
+}
+rule {
+  if LetStmtNode(stmt, _, _, expr);
+  if ctx = StmtTypeContext(stmt);
+  then ExprTypeContext(expr) = ctx;
+}
+rule {
+  if ReturnStmtNode(stmt, expr);
+  if ctx = StmtTypeContext(stmt);
+  then ExprTypeContext(expr) = ctx;
+}
+rule {
+  if FunctionStmtNode(stmt, func_node);
+  if ambient_ctx = StmtTypeContext(stmt);
+  if func_ctx = FunctionTypeContext(func_node);
+  then ContextExtension(ambient_ctx, func_ctx);
+}
+rule {
+  if IfStmtNode(stmt, cond, true_branch, false_branch);
+  if stmt_ctx = StmtTypeContext(stmt);
+  if cond_ctx = ExprTypeContext(cond);
+  if true_branch_ctx = StmtsTypeContext(true_branch);
+  if false_branch_ctx = StmtsTypeContext(false_branch);
+  then stmt_ctx = cond_ctx;
+  then cond_ctx = true_branch_ctx;
+  then true_branch_ctx = false_branch_ctx;
+}
+rule {
+  if WhileStmtNode(stmt, cond, body);
+  if stmt_ctx = StmtTypeContext(stmt);
+  if cond_ctx = ExprTypeContext(cond);
+  if body_ctx = StmtsTypeContext(body);
+  then stmt_ctx = cond_ctx;
+  then cond_ctx = body_ctx;
+}
 
 // ## Propagate type contexts through expressions.
 
-Axiom
-    EqualsExprNode(expr, lhs, rhs)
-    & expr_ctx = ExprTypeContext(expr)
-    & lhs_ctx = ExprTypeContext(lhs)
-    & rhs_ctx = ExprTypeContext(rhs)
-    =>
-    expr_ctx = lhs_ctx
-    & lhs_ctx = rhs_ctx
-    ;
+rule {
+  if EqualsExprNode(expr, lhs, rhs);
+  if expr_ctx = ExprTypeContext(expr);
+  if lhs_ctx = ExprTypeContext(lhs);
+  if rhs_ctx = ExprTypeContext(rhs);
+  then expr_ctx = lhs_ctx;
+  then lhs_ctx = rhs_ctx;
+}
 
-Axiom
-    AppExprNode(expr, fn_expr, arg_exprs)
-    & expr_ctx = ExprTypeContext(expr)
-    & fn_ctx = ExprTypeContext(fn_expr)
-    & args_ctx = ExprsTypeContext(arg_exprs)
-    =>
-    expr_ctx = fn_ctx
-    & fn_ctx = args_ctx
-    ;
+rule {
+  if AppExprNode(expr, fn_expr, arg_exprs);
+  if expr_ctx = ExprTypeContext(expr);
+  if fn_ctx = ExprTypeContext(fn_expr);
+  if args_ctx = ExprsTypeContext(arg_exprs);
+  then expr_ctx = fn_ctx;
+  then fn_ctx = args_ctx;
+}
 
-Axiom
-    FunctionExprNode(expr, func)
-    & expr_ctx = ExprTypeContext(expr)
-    & func_ctx = FunctionTypeContext(func)
-    =>
-    ContextExtension(expr_ctx, func_ctx)
-    ;
+rule {
+  if FunctionExprNode(expr, func_node);
+  if expr_ctx = ExprTypeContext(expr);
+  if func_ctx = FunctionTypeContext(func_node);
+  then ContextExtension(expr_ctx, func_ctx);
+}
 
 // ## Type instantiation.
-Sort Instantiation;
+type Instantiation;
 
-Func InstantiationTarget : Instantiation -> TypeContext;
+func InstantiationTarget(Instantiation) -> TypeContext;
 
-Func Instantiate : Instantiation * Type -> Type;
-Func InstantiateList : Instantiation * TypeList -> TypeList;
+func Instantiate(Instantiation, Type) -> Type;
+func InstantiateList(Instantiation, TypeList) -> TypeList;
 
-Axiom
-    instances = InstantiateList(_, NilTypeList())
-    =>
-    instances = NilTypeList()
-    ;
-Axiom
-    InstantiateList(instance, ConsTypeList(head, tail))!
-    =>
-    Instantiate(instance, head)!
-    & InstantiateList(instance, tail)!
-    ;
+rule {
+  if instances = InstantiateList(_, NilTypeList());
+  then instances = NilTypeList();
+}
+rule {
+  if InstantiateList(instance, ConsTypeList(head, tail))!;
+  then Instantiate(instance, head)!;
+  then InstantiateList(instance, tail)!;
+}
 
-Axiom
-    head_instance = Instantiate(instance, head)
-    & tail_instance = InstantiateList(instance, tail)
-    & instances = InstantiateList(instance, ConsTypeList(head, tail))
-    =>
-    instances = ConsTypeList(head_instance, tail_instance)
-    ;
+rule {
+  if head_instance = Instantiate(instance, head);
+  if tail_instance = InstantiateList(instance, tail);
+  if instances = InstantiateList(instance, ConsTypeList(head, tail));
+  then instances = ConsTypeList(head_instance, tail_instance);
+}
 
 // ## Instantiation laws.
-Axiom
-    tau = Instantiate(instance, sigma)
-    & TypeInContext(sigma, InstantiationTarget(instance))
-    =>
-    sigma = tau
-    ;
+rule {
+  if tau = Instantiate(instance, sigma);
+  if TypeInContext(sigma, InstantiationTarget(instance));
+  then sigma = tau;
+}
 
-Axiom
-    instance_void = Instantiate(_, VoidType())
-    =>
-    VoidType() = instance_void
-    ;
-Axiom
-    instance_boolean = Instantiate(_, BooleanType())
-    =>
-    BooleanType() = instance_boolean
-    ;
-Axiom
-    instance_number = Instantiate(_, NumberType())
-    =>
-    NumberType() = instance_number
-    ;
-Axiom
-    instance_string = Instantiate(_, StringType())
-    =>
-    StringType() = instance_string
-    ;
+rule {
+  if instance_void = Instantiate(_, VoidType());
+  then VoidType() = instance_void;
+}
+rule {
+  if instance_boolean = Instantiate(_, BooleanType());
+  then BooleanType() = instance_boolean;
+}
+rule {
+  if instance_number = Instantiate(_, NumberType());
+  then NumberType() = instance_number;
+}
+rule {
+  if instance_string = Instantiate(_, StringType());
+  then StringType() = instance_string;
+}
 
-Axiom
-    Instantiate(instance, FunctionType(dom, cod))!
-    =>
-    InstantiateList(instance, dom)!
-    & Instantiate(instance, cod)!
-    ;
-Axiom
-    dom_instances = InstantiateList(instance, dom)
-    & cod_instance = Instantiate(instance, cod)
-    & func_instance = Instantiate(instance, FunctionType(dom, cod))
-    =>
-    FunctionType(dom_instances, cod_instance) = func_instance
-    ;
+rule {
+  if Instantiate(instance, FunctionType(dom, cod))!;
+  then InstantiateList(instance, dom)!;
+  then Instantiate(instance, cod)!;
+}
+rule {
+  if dom_instances = InstantiateList(instance, dom);
+  if cod_instance = Instantiate(instance, cod);
+  if func_instance = Instantiate(instance, FunctionType(dom, cod));
+  then FunctionType(dom_instances, cod_instance) = func_instance;
+}
 
 
 // # Variable resolution.
@@ -636,121 +703,114 @@ Axiom
 // ArgListNode of a function definition, then the variables listed in args are only in scope for the
 // NilArgListNode at the end of args.
 
-Func PolyType : Type -> GeneralType;
+func PolyType(Type) -> GeneralType;
 // Declared earlier:
 // Func MonoType : Type -> GeneralType;
-Axiom sigma : Type => MonoType(sigma)!;
+rule {
+  if sigma: Type;
+  then MonoType(sigma)!;
+}
 
-Func VarTypeInStmts : Var * StmtListNode -> GeneralType;
-Func VarTypeInFunction : Var * FunctionNode -> GeneralType;
+func VarTypeInStmts(Var, StmtListNode) -> GeneralType;
+func VarTypeInFunction(Var, FunctionNode) -> GeneralType;
 // Declared earlier:
 // Func VarTypeInArgList : Var * ArgListNode -> GeneralType;
-Func VarTypeInExpr : Var * ExprNode -> GeneralType;
-Func VarTypeInExprs : Var * ExprListNode -> GeneralType;
+func VarTypeInExpr(Var, ExprNode) -> GeneralType;
+func VarTypeInExprs(Var, ExprListNode) -> GeneralType;
 
 // ## Base cases: Nodes that introduce variables
 
 // Every let statements introduces a variable.
-Axiom
-    ConsStmtListNode(_, head, tail)
-    & LetStmtNode(head, var, ty_annot, expr)
-    & ty = SemanticOptType(ty_annot)
-    & expr_type = ExprType(expr)
-    & mono_expr_type = MonoType(expr_type)
-    =>
-    expr_type = ty
-    & VarTypeInStmts(var, tail) = mono_expr_type
-    ;
+rule {
+  if ConsStmtListNode(_, head, tail);
+  if LetStmtNode(head, var, ty_annot, expr);
+  if ty = SemanticOptType(ty_annot);
+  if expr_type = ExprType(expr);
+  if mono_expr_type = MonoType(expr_type);
+  then expr_type = ty;
+  then VarTypeInStmts(var, tail) = mono_expr_type;
+}
 
 // Every function statement introduces a variable for statements occuring after the function
 // statement.
-Axiom
-    ConsStmtListNode(_, head, _)
-    & FunctionStmtNode(head, func)
-    & Function(func, _, _, _ ,_)
-    =>
-    PolyType(FunctionNodeType(func))!
-    ;
-Axiom
-    ConsStmtListNode(_, head, tail)
-    & FunctionStmtNode(head, func)
-    & Function(func, var, _, _ ,_)
-    & ty = PolyType(FunctionNodeType(func))
-    =>
-    VarTypeInStmts(var, tail) = ty
-    ;
+rule {
+  if ConsStmtListNode(_, head, _);
+  if FunctionStmtNode(head, func_node);
+  if Function(func_node, _, _, _, _);
+  then PolyType(FunctionNodeType(func_node))!;
+}
+rule {
+  if ConsStmtListNode(_, head, tail);
+  if FunctionStmtNode(head, func_node);
+  if Function(func_node, var, _, _, _);
+  if ty = PolyType(FunctionNodeType(func_node));
+  then VarTypeInStmts(var, tail) = ty;
+}
 
 // Every function node introduces the name of the function in the ArgListNode of the function (and
 // hence, by the propagation axioms below, also in the body of the function).
-Axiom
-    Function(func, var, arg, _ ,_)
-    & ty = MonoType(FunctionNodeType(func))
-    =>
-    VarTypeInArgList(var, arg) = ty
-    ;
+rule {
+  if Function(func_node, var, arg, _, _);
+  if ty = MonoType(FunctionNodeType(func_node));
+  then VarTypeInArgList(var, arg) = ty;
+}
 
 // Every function argument introduces a variable.
-Axiom
-    ConsArgListNode(_, var, otn, tail)
-    & ty = MonoType(SemanticOptType(otn))
-    =>
-    VarTypeInArgList(var, tail) = ty
-    ;
+rule {
+  if ConsArgListNode(_, var, otn, tail);
+  if ty = MonoType(SemanticOptType(otn));
+  then VarTypeInArgList(var, tail) = ty;
+}
 
 // ## Errors due to multiple introductions of the same variable
 //
 // For each base node case that introduces a variable, it is an error if the variable is already in
 // scope before the node.
 
-Axiom
-    ConsStmtListNode(stmts, head, _)
-    & LetStmtNode(head, var, _, _)
-    & VarTypeInStmts(var, stmts)!
-    =>
-    VariableShadowing();
-Axiom
-    FunctionStmtNode(head, func)
-    & Function(func, var, _, _ ,_)
-    & VarTypeInStmts(var, stmts)!
-    & ConsStmtListNode(stmts, head, _)
-    =>
-    VariableShadowing()
-    ;
-Axiom
-    Function(func, var, _, _, _)
-    & VarTypeInFunction(var, func)!
-    =>
-    VariableShadowing()
-    ;
-Axiom
-    ConsArgListNode(al, var, _, _)
-    & VarTypeInArgList(var, al)!
-    =>
-    VariableShadowing()
-    ;
+rule {
+  if ConsStmtListNode(stmts, head, _);
+  if LetStmtNode(head, var, _, _);
+  if VarTypeInStmts(var, stmts)!;
+  then VariableShadowing();
+}
+rule {
+  if FunctionStmtNode(head, func_node);
+  if Function(func_node, var, _, _, _);
+  if VarTypeInStmts(var, stmts)!;
+  if ConsStmtListNode(stmts, head, _);
+  then VariableShadowing();
+}
+rule {
+  if Function(func_node, var, _, _, _);
+  if VarTypeInFunction(var, func_node)!;
+  then VariableShadowing();
+}
+rule {
+  if ConsArgListNode(al, var, _, _);
+  if VarTypeInArgList(var, al)!;
+  then VariableShadowing();
+}
 
 // ## Propagation of variables through lists
 //
 // If a variable is in scope for ConsX(head, tail), then it should also be in scope for tail.
 
-Axiom
-    ConsStmtListNode(stmts, _, tail)
-    & sigma = VarTypeInStmts(var, stmts)
-    =>
-    VarTypeInStmts(var, tail) = sigma
-    ;
-Axiom
-    ConsArgListNode(al, _, _, tail)
-    & sigma = VarTypeInArgList(var, al)
-    =>
-    VarTypeInArgList(var, tail) = sigma;
-Axiom
-    ConsExprListNode(exprs, head, tail)
-    & sigma = VarTypeInExprs(var, exprs)
-    =>
-    VarTypeInExpr(var, head) = sigma
-    & VarTypeInExprs(var, tail) = sigma
-    ;
+rule {
+  if ConsStmtListNode(stmts, _, tail);
+  if sigma = VarTypeInStmts(var, stmts);
+  then VarTypeInStmts(var, tail) = sigma;
+}
+rule {
+  if ConsArgListNode(al, _, _, tail);
+  if sigma = VarTypeInArgList(var, al);
+  then VarTypeInArgList(var, tail) = sigma;
+}
+rule {
+  if ConsExprListNode(exprs, head, tail);
+  if sigma = VarTypeInExprs(var, exprs);
+  then VarTypeInExpr(var, head) = sigma;
+  then VarTypeInExprs(var, tail) = sigma;
+}
 
 // ## Propagating variables through nodes
 //
@@ -768,121 +828,112 @@ Axiom
 // We propagate 1 and 2 into 3, and 3 into the function body.
 
 // Propagate ambient variables into arg lists.
-Axiom
-    Function(func, _, args, _, _)
-    & sigma = VarTypeInFunction(var, func)
-    =>
-    VarTypeInArgList(var, args) = sigma
-    ;
+rule {
+  if Function(func_node, _, args, _, _);
+  if sigma = VarTypeInFunction(var, func_node);
+  then VarTypeInArgList(var, args) = sigma;
+}
 
 // By the "end" of a node list l we mean the unique nil node from which l can be obtained by
 // repeated consing. We need access to the end of an ArgListNode so that we know the full set of
 // variables introduced in that arg list.
-Pred ArgListEnd : ArgListNode * ArgListNode;
-Axiom NilArgListNode(arg_list) => ArgListEnd(arg_list, arg_list);
-Axiom
-    ConsArgListNode(arg_list, _, _, tail)
-    & ArgListEnd(tail, end)
-    =>
-    ArgListEnd(arg_list, end)
-    ;
+pred ArgListEnd(ArgListNode, ArgListNode);
+rule {
+  if NilArgListNode(arg_list);
+  then ArgListEnd(arg_list, arg_list);
+}
+rule {
+  if ConsArgListNode(arg_list, _, _, tail);
+  if ArgListEnd(tail, end);
+  then ArgListEnd(arg_list, end);
+}
 
 // Propagate variables from the arg list into the body.
-Axiom
-    Function(_, _, args, _, body)
-    & ArgListEnd(args, args_end)
-    & sigma = VarTypeInArgList(var, args_end)
-    =>
-    VarTypeInStmts(var, body) = sigma
-    ;
+rule {
+  if Function(_, _, args, _, body);
+  if ArgListEnd(args, args_end);
+  if sigma = VarTypeInArgList(var, args_end);
+  then VarTypeInStmts(var, body) = sigma;
+}
 
 // ### Propagating variables through statements
 
 // If a variable is in scope in the statement that defines a function, then the variable is also in
 // scope of the ArgListNode of that function (which then means that it is in scope for the body).
-Axiom
-    ConsStmtListNode(stmts, head, _)
-    & FunctionStmtNode(head, func)
-    & sigma = VarTypeInStmts(var, stmts)
-    =>
-    VarTypeInFunction(var, func) = sigma
-    ;
+rule {
+  if ConsStmtListNode(stmts, head, _);
+  if FunctionStmtNode(head, func_node);
+  if sigma = VarTypeInStmts(var, stmts);
+  then VarTypeInFunction(var, func_node) = sigma;
+}
 
 // Propagate variables through if statements.
-Axiom
-    ConsStmtListNode(stmts, head, _)
-    & IfStmtNode(head, cond, true_branch, false_branch)
-    & sigma = VarTypeInStmts(var, stmts)
-    =>
-    VarTypeInExpr(var, cond) = sigma
-    & VarTypeInStmts(var, true_branch) = sigma
-    & VarTypeInStmts(var, false_branch) = sigma
-    ;
+rule {
+  if ConsStmtListNode(stmts, head, _);
+  if IfStmtNode(head, cond, true_branch, false_branch);
+  if sigma = VarTypeInStmts(var, stmts);
+  then VarTypeInExpr(var, cond) = sigma;
+  then VarTypeInStmts(var, true_branch) = sigma;
+  then VarTypeInStmts(var, false_branch) = sigma;
+}
 
 // Propagate variables through while statements.
-Axiom
-    ConsStmtListNode(stmts, head, _)
-    & WhileStmtNode(head, cond, body)
-    & sigma = VarTypeInStmts(var, stmts)
-    =>
-    VarTypeInStmts(var, body) = sigma
-    & VarTypeInExpr(var, cond) = sigma
-    ;
+rule {
+  if ConsStmtListNode(stmts, head, _);
+  if WhileStmtNode(head, cond, body);
+  if sigma = VarTypeInStmts(var, stmts);
+  then VarTypeInStmts(var, body) = sigma;
+  then VarTypeInExpr(var, cond) = sigma;
+}
 
 // Propagate variables through expression statements.
-Axiom
-    ConsStmtListNode(stmts, head, _)
-    & ExprStmtNode(head, expr)
-    & sigma = VarTypeInStmts(var, stmts)
-    =>
-    VarTypeInExpr(var, expr) = sigma
-    ;
+rule {
+  if ConsStmtListNode(stmts, head, _);
+  if ExprStmtNode(head, expr);
+  if sigma = VarTypeInStmts(var, stmts);
+  then VarTypeInExpr(var, expr) = sigma;
+}
 
 // Propagate previously defined variables through let statements into initializer expressions.
-Axiom
-    ConsStmtListNode(stmts, head, _)
-    & LetStmtNode(head, _, _, expr)
-    & sigma = VarTypeInStmts(var, stmts)
-    =>
-    VarTypeInExpr(var, expr) = sigma
-    ;
+rule {
+  if ConsStmtListNode(stmts, head, _);
+  if LetStmtNode(head, _, _, expr);
+  if sigma = VarTypeInStmts(var, stmts);
+  then VarTypeInExpr(var, expr) = sigma;
+}
 
 // Propagate variables through return statements.
-Axiom
-    ConsStmtListNode(stmts, head, _)
-    & ReturnStmtNode(head, expr)
-    & sigma = VarTypeInStmts(var, stmts)
-    =>
-    VarTypeInExpr(var, expr) = sigma
-    ;
+rule {
+  if ConsStmtListNode(stmts, head, _);
+  if ReturnStmtNode(head, expr);
+  if sigma = VarTypeInStmts(var, stmts);
+  then VarTypeInExpr(var, expr) = sigma;
+}
 
 // ### Propagating variables through expressions
 
 // Propagate variables through equality expressions.
-Axiom
-    EqualsExprNode(expr, lhs, rhs)
-    & sigma = VarTypeInExpr(var, expr)
-    =>
-    VarTypeInExpr(var, lhs) = sigma
-    & VarTypeInExpr(var, rhs) = sigma
-    ;
+rule {
+  if EqualsExprNode(expr, lhs, rhs);
+  if sigma = VarTypeInExpr(var, expr);
+  then VarTypeInExpr(var, lhs) = sigma;
+  then VarTypeInExpr(var, rhs) = sigma;
+}
 
 // Propagate variables through function application expressions.
-Axiom
-    AppExprNode(expr, func, args)
-    & sigma = VarTypeInExpr(var, expr)
-    =>
-    VarTypeInExpr(var, func) = sigma
-    & VarTypeInExprs(var, args) = sigma
-    ;
+rule {
+  if AppExprNode(expr, func_node, args);
+  if sigma = VarTypeInExpr(var, expr);
+  then VarTypeInExpr(var, func_node) = sigma;
+  then VarTypeInExprs(var, args) = sigma;
+}
 
 // Propagate variables through function expression.
-Axiom
-    FunctionExprNode(expr, func)
-    & sigma = VarTypeInExpr(var, expr)
-    =>
-    VarTypeInFunction(var, func) = sigma
-    ;
+rule {
+  if FunctionExprNode(expr, func_node);
+  if sigma = VarTypeInExpr(var, expr);
+  then VarTypeInFunction(var, func_node) = sigma;
+}
 
 // # Expression typing.
 //
@@ -893,104 +944,118 @@ Axiom
 
 // The instances associated to expressions with PolyTypes that must be instantiated into
 // MonoTypes.
-Func ExprInstantiation : ExprNode -> Instantiation;
+func ExprInstantiation(ExprNode) -> Instantiation;
 
 // Both ExprType and ExprTypes are total. Our axioms enforce that ExprTypes is given by mapping
 // ExprType on each ExprNode element.
 
-Axiom
-    NilExprListNode(exprs)
-    & ntl = NilTypeList()
-    =>
-    ExprTypes(exprs) = ntl
-    ;
-Axiom
-    ConsExprListNode(exprs, head, tail)
-    & tys = ExprTypes(exprs)
-    & head_ty = ExprType(head)
-    & tail_tys = ExprTypes(tail)
-    =>
-    ConsTypeList(head_ty, tail_tys) = tys
-    ;
+rule {
+  if NilExprListNode(exprs);
+  if ntl = NilTypeList();
+  then ExprTypes(exprs) = ntl;
+}
+rule {
+  if ConsExprListNode(exprs, head, tail);
+  if tys = ExprTypes(exprs);
+  if head_ty = ExprType(head);
+  if tail_tys = ExprTypes(tail);
+  then ConsTypeList(head_ty, tail_tys) = tys;
+}
 
 // ## Typing constraints from usage of expressions in statements.
-Axiom
-    IfStmtNode(_, cond, _, _)
-    & et = ExprType(cond)
-    =>
-    et = BooleanType()
-    ;
-Axiom
-    WhileStmtNode(_, cond, _)
-    & et = ExprType(cond)
-    =>
-    et = BooleanType()
-    ;
+rule {
+  if IfStmtNode(_, cond, _, _);
+  if et = ExprType(cond);
+  then et = BooleanType();
+}
+rule {
+  if WhileStmtNode(_, cond, _);
+  if et = ExprType(cond);
+  then et = BooleanType();
+}
 
 // ## Typing constraints of expression from usages in other expression.
-Axiom VariableExprNode(expr, var) & VarTypeInExpr(var, expr) = MonoType(sigma) => ExprType(expr) = sigma;
+rule {
+  if VariableExprNode(expr, var);
+  if VarTypeInExpr(var, expr) = MonoType(sigma);
+  then ExprType(expr) = sigma;
+}
 
-Axiom
-    VariableExprNode(expr, var)
-    & VarTypeInExpr(var, expr) = PolyType(_)
-    =>
-    ExprInstantiation(expr)!
-    ;
-Axiom
-    VariableExprNode(expr, var)
-    & VarTypeInExpr(var, expr) = PolyType(_)
-    & instance = ExprInstantiation(expr)
-    & ctx = ExprTypeContext(expr)
-    =>
-    InstantiationTarget(instance) = ctx
-    ;
-Axiom
-    VariableExprNode(expr, var)
-    & VarTypeInExpr(var, expr) = PolyType(sigma)
-    & instance = ExprInstantiation(expr)
-    & expr_ty = ExprType(expr)
-    =>
-    Instantiate(instance, sigma) = expr_ty
-    ;
+rule {
+  if VariableExprNode(expr, var);
+  if VarTypeInExpr(var, expr) = PolyType(_);
+  then ExprInstantiation(expr)!;
+}
+rule {
+  if VariableExprNode(expr, var);
+  if VarTypeInExpr(var, expr) = PolyType(_);
+  if instance = ExprInstantiation(expr);
+  if ctx = ExprTypeContext(expr);
+  then InstantiationTarget(instance) = ctx;
+}
+rule {
+  if VariableExprNode(expr, var);
+  if VarTypeInExpr(var, expr) = PolyType(sigma);
+  if instance = ExprInstantiation(expr);
+  if expr_ty = ExprType(expr);
+  then Instantiate(instance, sigma) = expr_ty;
+}
 
-Axiom VoidExprNode(expr) & et = ExprType(expr) => et = VoidType();
-Axiom FalseExprNode(expr) & et = ExprType(expr) => et = BooleanType();
-Axiom TrueExprNode(expr) & et = ExprType(expr) => et = BooleanType();
-Axiom StringLiteralExprNode(expr, _) & et = ExprType(expr) => et = StringType();
-Axiom NumberLiteralExprNode(expr, _) & et = ExprType(expr) => et = NumberType();
+rule {
+  if VoidExprNode(expr);
+  if et = ExprType(expr);
+  then et = VoidType();
+}
+rule {
+  if FalseExprNode(expr);
+  if et = ExprType(expr);
+  then et = BooleanType();
+}
+rule {
+  if TrueExprNode(expr);
+  if et = ExprType(expr);
+  then et = BooleanType();
+}
+rule {
+  if StringLiteralExprNode(expr, _);
+  if et = ExprType(expr);
+  then et = StringType();
+}
+rule {
+  if NumberLiteralExprNode(expr, _);
+  if et = ExprType(expr);
+  then et = NumberType();
+}
 
-Axiom
-    EqualsExprNode(eq, lhs, rhs)
-    & eq_type = ExprType(eq)
-    & lhs_type = ExprType(lhs)
-    & rhs_type = ExprType(rhs)
-    =>
-    eq_type = BooleanType()
-    & lhs_type = rhs_type
-    ;
+rule {
+  if EqualsExprNode(eq, lhs, rhs);
+  if eq_type = ExprType(eq);
+  if lhs_type = ExprType(lhs);
+  if rhs_type = ExprType(rhs);
+  then eq_type = BooleanType();
+  then lhs_type = rhs_type;
+}
   
 
 // The conclusions of these axioms assert that DomainTypes or CodomainType are defined on some
 // types tau. By the axioms relating these functions to FunctionType, this means that such types
 // tau must be function types.
-Axiom
-    AppExprNode(expr, func, args)
-    & res_ty = ExprType(expr)
-    & func_ty = ExprType(func)
-    & arg_tys = ExprTypes(args)
-    =>
-    arg_tys = DomainTypes(func_ty)
-    & res_ty = CodomainType(func_ty)
-    ;
+rule {
+  if AppExprNode(expr, func_node, args);
+  if res_ty = ExprType(expr);
+  if func_ty = ExprType(func_node);
+  if arg_tys = ExprTypes(args);
+  then arg_tys = DomainTypes(func_ty);
+  then res_ty = CodomainType(func_ty);
+}
 
 // No need to instantiate the type of a function expression: Since it would be instantiated only
 // once anyway, we can directly equate the function node type with the expression type.
-Axiom
-    FunctionExprNode(expr, func)
-    & func_ty = FunctionNodeType(func)
-    =>
-    ExprType(expr) = func_ty
-    ;
+rule {
+  if FunctionExprNode(expr, func_node);
+  if func_ty = FunctionNodeType(func_node);
+  then ExprType(expr) = func_ty;
+}
 
 // # Type analysis of function definitions
 //
@@ -1013,26 +1078,49 @@ Axiom
 
 // CanProceedStmt(stmt) is true if execution can flow past this statement. CanProceedStmts(stmts)
 // is true if CanProceed holds for all statements in stmts.
-Pred CanProceedStmt : StmtNode;
-Pred CanProceedStmts : StmtListNode;
+pred CanProceedStmt(StmtNode);
+pred CanProceedStmts(StmtListNode);
 
-Axiom NilStmtListNode(stmts) => CanProceedStmts(stmts);
-Axiom
-    ConsStmtListNode(stmts, head, tail)
-    & CanProceedStmt(head)
-    & CanProceedStmts(tail)
-    =>
-    CanProceedStmts(stmts);
+rule {
+  if NilStmtListNode(stmts);
+  then CanProceedStmts(stmts);
+}
+rule {
+  if ConsStmtListNode(stmts, head, tail);
+  if CanProceedStmt(head);
+  if CanProceedStmts(tail);
+  then CanProceedStmts(stmts);
+}
 
-Axiom ExprStmtNode(stmt, _) => CanProceedStmt(stmt);
-Axiom LetStmtNode(stmt, _, _, _) => CanProceedStmt(stmt);
+rule {
+  if ExprStmtNode(stmt, _);
+  then CanProceedStmt(stmt);
+}
+rule {
+  if LetStmtNode(stmt, _, _, _);
+  then CanProceedStmt(stmt);
+}
 // ReturnStmtNode does not proceed.
 // ReturnVoidStmtNode does not proceed.
-Axiom FunctionStmtNode(stmt, _) => CanProceedStmt(stmt);
+rule {
+  if FunctionStmtNode(stmt, _);
+  then CanProceedStmt(stmt);
+}
 // An IfStmtNode can proceed if at least one of the two branches can proceed.
-Axiom IfStmtNode(stmt, _, true_branch, _) & CanProceedStmts(true_branch) => CanProceedStmt(stmt);
-Axiom IfStmtNode(stmt, _, _, false_branch) & CanProceedStmts(false_branch) => CanProceedStmt(stmt);
-Axiom WhileStmtNode(stmt, _, _) => CanProceedStmt(stmt);
+rule {
+  if IfStmtNode(stmt, _, true_branch, _);
+  if CanProceedStmts(true_branch);
+  then CanProceedStmt(stmt);
+}
+rule {
+  if IfStmtNode(stmt, _, _, false_branch);
+  if CanProceedStmts(false_branch);
+  then CanProceedStmt(stmt);
+}
+rule {
+  if WhileStmtNode(stmt, _, _);
+  then CanProceedStmt(stmt);
+}
 
 // ## Explicit return type analysis
 //
@@ -1041,53 +1129,56 @@ Axiom WhileStmtNode(stmt, _, _) => CanProceedStmt(stmt);
 // about explicit returns, not the possible implicit `return ();` at the end of a function.
 // However, every list of statements can at most return expressions of a single type, so we can
 // model `ReturnsType` as a partial function.
-Func ReturnsType : StmtListNode -> Type;
+func ReturnsType(StmtListNode) -> Type;
 
 // If there is any suffix of a statement list that can return a given type, then the full list can
 // return that type.
-Axiom ConsStmtListNode(stmts, _, tail) & rt = ReturnsType(tail) => rt = ReturnsType(stmts);
+rule {
+  if ConsStmtListNode(stmts, _, tail);
+  if rt = ReturnsType(tail);
+  then rt = ReturnsType(stmts);
+}
 
 // Base cases for return statements with and without (i.e. void) expressions.
-Axiom
-    ConsStmtListNode(stmts, head, _)
-    & ReturnStmtNode(head, return_value)
-    & et = ExprType(return_value)
-    =>
-    ReturnsType(stmts) = et
-    ;
+rule {
+  if ConsStmtListNode(stmts, head, _);
+  if ReturnStmtNode(head, return_value);
+  if et = ExprType(return_value);
+  then ReturnsType(stmts) = et;
+}
 
-Axiom ReturnVoidStmtNode(_) => VoidType()!;
-Axiom
-    ConsStmtListNode(stmts, head, _)
-    & ReturnVoidStmtNode(head)
-    & vt = VoidType()
-    =>
-    & ReturnsType(stmts) = vt;
+rule {
+  if ReturnVoidStmtNode(_);
+  then VoidType()!;
+}
+rule {
+  if ConsStmtListNode(stmts, head, _);
+  if ReturnVoidStmtNode(head);
+  if vt = VoidType();
+  then ReturnsType(stmts) = vt;
+}
 
 // An if statement can return a type if at least one of its two branches returns that type.
-Axiom
-    ConsStmtListNode(stmts, head, _)
-    & IfStmtNode(head, _, true_branch, _)
-    & rt = ReturnsType(true_branch)
-    =>
-    ReturnsType(stmts) = rt
-    ;
-Axiom
-    ConsStmtListNode(stmts, head, _)
-    & IfStmtNode(head, _, _, false_branch)
-    & rt = ReturnsType(false_branch)
-    =>
-    ReturnsType(stmts) = rt
-    ;
+rule {
+  if ConsStmtListNode(stmts, head, _);
+  if IfStmtNode(head, _, true_branch, _);
+  if rt = ReturnsType(true_branch);
+  then ReturnsType(stmts) = rt;
+}
+rule {
+  if ConsStmtListNode(stmts, head, _);
+  if IfStmtNode(head, _, _, false_branch);
+  if rt = ReturnsType(false_branch);
+  then ReturnsType(stmts) = rt;
+}
 
 // A while statement can return a type if its body can return that type.
-Axiom
-    ConsStmtListNode(stmts, head, _)
-    & WhileStmtNode(head, _, body)
-    & rt = ReturnsType(body)
-    =>
-    ReturnsType(stmts) = rt
-    ;
+rule {
+  if ConsStmtListNode(stmts, head, _);
+  if WhileStmtNode(head, _, body);
+  if rt = ReturnsType(body);
+  then ReturnsType(stmts) = rt;
+}
 
 // ## Tying it together.
 
@@ -1095,43 +1186,43 @@ Axiom
 // FunctionNodeType : FunctionNode -> Type
 
 // FunctionNodeType is always a function type.
-Axiom ft = FunctionNodeType(_) => & DomainTypes(ft)! & CodomainType(ft)!;
+rule {
+  if ft = FunctionNodeType(_);
+  then DomainTypes(ft)!;
+  then CodomainType(ft)!;
+}
 
 // Typing constraints due to the types of function variables. Note that the types of argument
 // variables as given by VarInArgListNode were previously unified with the optional type annotation (an
 // opaque Type element if no annotation was given), which in turn were unified with the types
 // appearing in SemanticArgTypes.
-Axiom
-    Function(func, _, args, _, _)
-    & dom = DomainTypes(FunctionNodeType(func))
-    =>
-    SemanticArgTypes(args) = dom
-    ;
+rule {
+  if Function(func_node, _, args, _, _);
+  if dom = DomainTypes(FunctionNodeType(func_node));
+  then SemanticArgTypes(args) = dom;
+}
 
 // Typing constraints due to an explicit codomain annotation.
-Axiom
-    Function(func, _, _, cod, _)
-    & ft = FunctionNodeType(func)
-    & sot = SemanticOptType(cod)
-    =>
-    CodomainType(ft) = sot
-    ;
+rule {
+  if Function(func_node, _, _, cod, _);
+  if ft = FunctionNodeType(func_node);
+  if sot = SemanticOptType(cod);
+  then CodomainType(ft) = sot;
+}
 
 // Typing constraints due to explicit return statements.
-Axiom
-    Function(func, _, _, _, body)
-    & ft = FunctionNodeType(func)
-    & rt = ReturnsType(body)
-    =>
-    rt = CodomainType(ft)
-    ;
+rule {
+  if Function(func_node, _, _, _, body);
+  if ft = FunctionNodeType(func_node);
+  if rt = ReturnsType(body);
+  then rt = CodomainType(ft);
+}
 
 // An implicit Void return type in case we cannot infer that the function body must
 // always reach an explicit return statement.
-Axiom
-    Function(func, _, _, _, body)
-    & CanProceedStmts(body)
-    & cod = CodomainType(FunctionNodeType(func))
-    =>
-    cod = VoidType()
-    ;
+rule {
+  if Function(func_node, _, _, _, body);
+  if CanProceedStmts(body);
+  if cod = CodomainType(FunctionNodeType(func_node));
+  then cod = VoidType();
+}
