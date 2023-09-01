@@ -93,22 +93,22 @@ func domain_types(Type) -> TypeList;
 func codomain_type(Type) -> Type;
 
 rule {
-  if domain_types(tau)!;
-  then codomain_type(tau)!;
+    if domain_types(tau)!;
+    then codomain_type(tau)!;
 }
 rule {
-  if codomain_type(tau)!;
-  then domain_types(tau)!;
+    if codomain_type(tau)!;
+    then domain_types(tau)!;
 }
 rule {
-  if kappa = function_type(sigmas, tau);
-  then domain_types(kappa) = sigmas;
-  then codomain_type(kappa) = tau;
+    if kappa = function_type(sigmas, tau);
+    then domain_types(kappa) = sigmas;
+    then codomain_type(kappa) = tau;
 }
 rule {
-  if sigmas = domain_types(kappa);
-  if tau = codomain_type(kappa);
-  then function_type(sigmas, tau) = kappa;
+    if sigmas = domain_types(kappa);
+    if tau = codomain_type(kappa);
+    then function_type(sigmas, tau) = kappa;
 }
 
 // ## TypeList operators.
@@ -117,64 +117,64 @@ rule {
 func nil_type_list() -> TypeList;
 func cons_type_list(Type, TypeList) -> TypeList;
 rule {
-  if nil_type_list() = cons_type_list(_, _);
-  then conflicting_types();
+    if nil_type_list() = cons_type_list(_, _);
+    then conflicting_types();
 }
 rule {
-  if cons_type_list(head_0, tail_0) = cons_type_list(head_1, tail_1);
-  then head_0 = head_1;
-  then tail_0 = tail_1;
+    if cons_type_list(head_0, tail_0) = cons_type_list(head_1, tail_1);
+    then head_0 = head_1;
+    then tail_0 = tail_1;
 }
 
 // ## Joint injectivity of type operators.
 rule {
-  if void_type() = boolean_type();
-  then conflicting_types();
+    if void_type() = boolean_type();
+    then conflicting_types();
 }
 rule {
-  if void_type() = number_type();
-  then conflicting_types();
+    if void_type() = number_type();
+    then conflicting_types();
 }
 rule {
-  if void_type() = string_type();
-  then conflicting_types();
+    if void_type() = string_type();
+    then conflicting_types();
 }
 rule {
-  if void_type() = function_type(_, _);
-  then conflicting_types();
-}
-
-rule {
-  if boolean_type() = number_type();
-  then conflicting_types();
-}
-rule {
-  if boolean_type() = string_type();
-  then conflicting_types();
-}
-rule {
-  if boolean_type() = function_type(_, _);
-  then conflicting_types();
+    if void_type() = function_type(_, _);
+    then conflicting_types();
 }
 
 rule {
-  if number_type() = string_type();
-  then conflicting_types();
+    if boolean_type() = number_type();
+    then conflicting_types();
 }
 rule {
-  if number_type() = function_type(_, _);
-  then conflicting_types();
+    if boolean_type() = string_type();
+    then conflicting_types();
+}
+rule {
+    if boolean_type() = function_type(_, _);
+    then conflicting_types();
 }
 
 rule {
-  if string_type() = function_type(_, _);
-  then conflicting_types();
+    if number_type() = string_type();
+    then conflicting_types();
+}
+rule {
+    if number_type() = function_type(_, _);
+    then conflicting_types();
 }
 
 rule {
-  if function_type(domain_0, codomain_0) = function_type(domain_1, codomain_1);
-  then domain_0 = domain_1;
-  then codomain_0 = codomain_1;
+    if string_type() = function_type(_, _);
+    then conflicting_types();
+}
+
+rule {
+    if function_type(domain_0, codomain_0) = function_type(domain_1, codomain_1);
+    then domain_0 = domain_1;
+    then codomain_0 = codomain_1;
 }
 
 // ## Functions assigning to node elements their corresponding semantic Type elements.
@@ -189,82 +189,82 @@ func function_node_type(FunctionNode) -> Type;
 
 // All of the functions into Type that we've just declared are total.
 rule {
-  if tn: TypeNode;
-  then semantic_type(tn)!;
+    if tn: TypeNode;
+    then semantic_type(tn)!;
 }
 rule {
-  if otn: OptTypeNode;
-  then semantic_opt_type(otn)!;
+    if otn: OptTypeNode;
+    then semantic_opt_type(otn)!;
 }
 rule {
-  if agn: ArgListNode;
-  then semantic_arg_types(agn)!;
+    if agn: ArgListNode;
+    then semantic_arg_types(agn)!;
 }
 rule {
-  if en: ExprNode;
-  then expr_type(en)!;
+    if en: ExprNode;
+    then expr_type(en)!;
 }
 rule {
-  if eln: ExprListNode;
-  then expr_types(eln)!;
+    if eln: ExprListNode;
+    then expr_types(eln)!;
 }
 rule {
-  if fcn: FunctionNode;
-  then function_node_type(fcn)!;
+    if fcn: FunctionNode;
+    then function_node_type(fcn)!;
 }
 
 // Since SemanticType is total, these rules will fire for all TypeNodes.
 rule {
-  if void_type_node(tn);
-  if sigma = semantic_type(tn);
-  then void_type() = sigma;
+    if void_type_node(tn);
+    if sigma = semantic_type(tn);
+    then void_type() = sigma;
 }
 rule {
-  if boolean_type_node(tn);
-  if sigma = semantic_type(tn);
-  then boolean_type() = sigma;
+    if boolean_type_node(tn);
+    if sigma = semantic_type(tn);
+    then boolean_type() = sigma;
 }
 rule {
-  if number_type_node(tn);
-  if sigma = semantic_type(tn);
-  then number_type() = sigma;
+    if number_type_node(tn);
+    if sigma = semantic_type(tn);
+    then number_type() = sigma;
 }
 rule {
-  if string_type_node(tn);
-  if sigma = semantic_type(tn);
-  then string_type() = sigma;
+    if string_type_node(tn);
+    if sigma = semantic_type(tn);
+    then string_type() = sigma;
 }
 
 // Other axioms assert that SemanticArgTypes and SemanticType are total functions, so this rule
 // will fire for al FunctionTypeNodes.
 rule {
-  if function_type_node(tn, args, codomain);
-  if dom_types = semantic_arg_types(args);
-  if cod_type = semantic_type(codomain);
-  if function_type = semantic_type(tn);
-  then function_type(dom_types, cod_type) = function_type;
+    if function_type_node(tn, args, codomain);
+    if dom_types = semantic_arg_types(args);
+    if cod_type = semantic_type(codomain);
+    if function_type = semantic_type(tn);
+    then function_type(dom_types, cod_type) = function_type;
 }
 
 // SemanticOptType is total, but only for SomeOptTypeNode elements does it have a determined type.
 // If no other rules apply, it will be an opaque Type element determined only by the OptTypeNode
 // element.
 rule {
-  if some_opt_type_node(otn, tn);
-  if sigma = semantic_type(tn);
-  then semantic_opt_type(otn) = sigma;
+    if some_opt_type_node(otn, tn);
+    if sigma = semantic_type(tn);
+    then semantic_opt_type(otn) = sigma;
 }
 
 rule {
-  if nil_arg_list_node(al);
-  if semantic_types = semantic_arg_types(al);
-  then nil_type_list() = semantic_types;
+    if nil_arg_list_node(al);
+    if semantic_types = semantic_arg_types(al);
+    then nil_type_list() = semantic_types;
 }
 rule {
-  if cons_arg_list_node(al, _, head_type, tail);
-  if semantic_head = semantic_opt_type(head_type);
-  if semantic_tail = semantic_arg_types(tail);
-  if semantic_types = semantic_arg_types(al);
-  then semantic_types = cons_type_list(semantic_head, semantic_tail);
+    if cons_arg_list_node(al, _, head_type, tail);
+    if semantic_head = semantic_opt_type(head_type);
+    if semantic_tail = semantic_arg_types(tail);
+    if semantic_types = semantic_arg_types(al);
+    then semantic_types = cons_type_list(semantic_head, semantic_tail);
 }
 
 // ## Determined types, i.e. those that do not contain unsolved type variables.
@@ -298,58 +298,58 @@ pred determined_types(TypeList);
 
 // A type list is determined if all of the types it contains are determined.
 rule {
-  if sigmas = nil_type_list();
-  then determined_types(sigmas);
+    if sigmas = nil_type_list();
+    then determined_types(sigmas);
 }
 rule {
-  if sigmas = cons_type_list(head, tail);
-  if determined_type(head);
-  if determined_types(tail);
-  then determined_types(sigmas);
-}
-
-rule {
-  if sigma = void_type();
-  then determined_type(sigma);
-}
-rule {
-  if sigma = boolean_type();
-  then determined_type(sigma);
-}
-rule {
-  if sigma = number_type();
-  then determined_type(sigma);
-}
-rule {
-  if sigma = string_type();
-  then determined_type(sigma);
-}
-rule {
-  if sigma = function_type(dom, cod);
-  if determined_types(dom);
-  if determined_type(cod);
-  then determined_type(sigma);
-}
-rule {
-  if sigmas = domain_types(kappa);
-  if determined_type(kappa);
-  then determined_types(sigmas);
-}
-rule {
-  if tau = codomain_type(kappa);
-  if determined_type(kappa);
-  then determined_type(tau);
+    if sigmas = cons_type_list(head, tail);
+    if determined_type(head);
+    if determined_types(tail);
+    then determined_types(sigmas);
 }
 
 rule {
-  if cons_arg_list_node(_, _, otn, _);
-  if t = semantic_opt_type(otn);
-  then determined_type(t);
+    if sigma = void_type();
+    then determined_type(sigma);
 }
 rule {
-  if function(_, _, _, codomain_otn, _);
-  if t = semantic_opt_type(codomain_otn);
-  then determined_type(t);
+    if sigma = boolean_type();
+    then determined_type(sigma);
+}
+rule {
+    if sigma = number_type();
+    then determined_type(sigma);
+}
+rule {
+    if sigma = string_type();
+    then determined_type(sigma);
+}
+rule {
+    if sigma = function_type(dom, cod);
+    if determined_types(dom);
+    if determined_type(cod);
+    then determined_type(sigma);
+}
+rule {
+    if sigmas = domain_types(kappa);
+    if determined_type(kappa);
+    then determined_types(sigmas);
+}
+rule {
+    if tau = codomain_type(kappa);
+    if determined_type(kappa);
+    then determined_type(tau);
+}
+
+rule {
+    if cons_arg_list_node(_, _, otn, _);
+    if t = semantic_opt_type(otn);
+    then determined_type(t);
+}
+rule {
+    if function(_, _, _, codomain_otn, _);
+    if t = semantic_opt_type(codomain_otn);
+    then determined_type(t);
 }
 
 // ## Well-founded types
@@ -368,40 +368,40 @@ rule {
 
 pred smaller_type(Type, Type);
 rule {
-  if smaller_type(sigma, tau);
-  if smaller_type(tau, kappa);
-  then smaller_type(sigma, kappa);
+    if smaller_type(sigma, tau);
+    if smaller_type(tau, kappa);
+    then smaller_type(sigma, kappa);
 }
 
 rule {
-  if smaller_type(sigma, sigma);
-  then conflicting_types();
+    if smaller_type(sigma, sigma);
+    then conflicting_types();
 }
 
 // SmallerTypes(sigmas, tau) <=> forall sigma in sigma. SmallerType(sigma, tau)
 pred smaller_types(TypeList, Type);
 rule {
-  if sigmas = nil_type_list();
-  if tau: Type;
-  then smaller_types(sigmas, tau);
+    if sigmas = nil_type_list();
+    if tau: Type;
+    then smaller_types(sigmas, tau);
 }
 rule {
-  if smaller_types(cons_type_list(head, tail), tau);
-  then smaller_type(head, tau);
-  then smaller_types(tail, tau);
+    if smaller_types(cons_type_list(head, tail), tau);
+    then smaller_type(head, tau);
+    then smaller_types(tail, tau);
 }
 rule {
-  if smaller_type(head, tau);
-  if smaller_types(tail, tau);
-  if sigmas = cons_type_list(head, tail);
-  then smaller_types(sigmas, tau);
+    if smaller_type(head, tau);
+    if smaller_types(tail, tau);
+    if sigmas = cons_type_list(head, tail);
+    then smaller_types(sigmas, tau);
 }
 
 // All domain types and the codomain of a function type are smaller than the function type.
 rule {
-  if kappa = function_type(sigmas, tau);
-  then smaller_types(sigmas, kappa);
-  then smaller_type(tau, kappa);
+    if kappa = function_type(sigmas, tau);
+    then smaller_types(sigmas, kappa);
+    then smaller_type(tau, kappa);
 }
 
 // # Type contexts.
@@ -411,62 +411,62 @@ pred type_in_context(Type, TypeContext);
 pred types_in_context(TypeList, TypeContext);
 
 rule {
-  if gamma: TypeContext;
-  if nil_type_list()!;
-  then types_in_context(nil_type_list(), gamma);
+    if gamma: TypeContext;
+    if nil_type_list()!;
+    then types_in_context(nil_type_list(), gamma);
 }
 rule {
-  if sigmas = cons_type_list(sigmas_head, sigmas_tail);
-  if type_in_context(sigmas_head, gamma);
-  if types_in_context(sigmas_tail, gamma);
-  then types_in_context(sigmas, gamma);
+    if sigmas = cons_type_list(sigmas_head, sigmas_tail);
+    if type_in_context(sigmas_head, gamma);
+    if types_in_context(sigmas_tail, gamma);
+    then types_in_context(sigmas, gamma);
 }
 
 rule {
-  if types_in_context(cons_type_list(head, tail), gamma);
-  then type_in_context(head, gamma);
-  then types_in_context(tail, gamma);
+    if types_in_context(cons_type_list(head, tail), gamma);
+    then type_in_context(head, gamma);
+    then types_in_context(tail, gamma);
 }
 
 pred context_extension(TypeContext, TypeContext);
 rule {
-  if context_extension(gamma_0, gamma_1);
-  if type_in_context(sigma, gamma_0);
-  then type_in_context(sigma, gamma_1);
+    if context_extension(gamma_0, gamma_1);
+    if type_in_context(sigma, gamma_0);
+    then type_in_context(sigma, gamma_1);
 }
 
 // ## Type contexts are closed under type formers and their inverses.
 rule {
-  if type_in_context(function_type(dom, cod), gamma);
-  then types_in_context(dom, gamma);
-  then type_in_context(cod, gamma);
+    if type_in_context(function_type(dom, cod), gamma);
+    then types_in_context(dom, gamma);
+    then type_in_context(cod, gamma);
 }
 rule {
-  if kappa = function_type(dom, cod);
-  if types_in_context(dom, gamma);
-  if type_in_context(cod, gamma);
-  then type_in_context(kappa, gamma);
+    if kappa = function_type(dom, cod);
+    if types_in_context(dom, gamma);
+    if type_in_context(cod, gamma);
+    then type_in_context(kappa, gamma);
 }
 
 rule {
-  if gamma: TypeContext;
-  if sigma = void_type();
-  then type_in_context(sigma, gamma);
+    if gamma: TypeContext;
+    if sigma = void_type();
+    then type_in_context(sigma, gamma);
 }
 rule {
-  if gamma: TypeContext;
-  if sigma = boolean_type();
-  then type_in_context(sigma, gamma);
+    if gamma: TypeContext;
+    if sigma = boolean_type();
+    then type_in_context(sigma, gamma);
 }
 rule {
-  if gamma: TypeContext;
-  if sigma = number_type();
-  then type_in_context(sigma, gamma);
+    if gamma: TypeContext;
+    if sigma = number_type();
+    then type_in_context(sigma, gamma);
 }
 rule {
-  if gamma: TypeContext;
-  if sigma = string_type();
-  then type_in_context(sigma, gamma);
+    if gamma: TypeContext;
+    if sigma = string_type();
+    then type_in_context(sigma, gamma);
 }
 
 // ## The type contexts associated with expressions and statements.
@@ -479,32 +479,32 @@ func expr_type_context(ExprNode) -> TypeContext;
 func exprs_type_context(ExprListNode) -> TypeContext;
 
 rule {
-  if mn: ModuleNode;
-  then module_type_context(mn)!;
+    if mn: ModuleNode;
+    then module_type_context(mn)!;
 }
 rule {
-  if fn: FunctionNode;
-  then function_type_context(fn)!;
+    if fn: FunctionNode;
+    then function_type_context(fn)!;
 }
 rule {
-  if args: ArgListNode;
-  then arg_list_context(args)!;
+    if args: ArgListNode;
+    then arg_list_context(args)!;
 }
 rule {
-  if stmt: StmtNode;
-  then stmt_type_context(stmt)!;
+    if stmt: StmtNode;
+    then stmt_type_context(stmt)!;
 }
 rule {
-  if stmts: StmtListNode;
-  then stmts_type_context(stmts)!;
+    if stmts: StmtListNode;
+    then stmts_type_context(stmts)!;
 }
 rule {
-  if expr: ExprNode;
-  then expr_type_context(expr)!;
+    if expr: ExprNode;
+    then expr_type_context(expr)!;
 }
 rule {
-  if exprs: ExprListNode;
-  then exprs_type_context(exprs)!;
+    if exprs: ExprListNode;
+    then exprs_type_context(exprs)!;
 }
 
 // ## Populating the TypeInContext predicate.
@@ -516,112 +516,112 @@ func mono_type(Type) -> GeneralType;
 
 // The type of a function argument is in the context of the arg list of the function.
 rule {
-  if cons_arg_list_node(arg_list, _, head_ty_node, _);
-  if ctx = arg_list_context(arg_list);
-  if head_ty = semantic_opt_type(head_ty_node);
-  then type_in_context(head_ty, ctx);
+    if cons_arg_list_node(arg_list, _, head_ty_node, _);
+    if ctx = arg_list_context(arg_list);
+    if head_ty = semantic_opt_type(head_ty_node);
+    then type_in_context(head_ty, ctx);
 }
 
 // Relate type contexts of node lists with the type contexts of individual nodes in the lists.
 rule {
-  if cons_arg_list_node(al, _, _, tail);
-  if arg_list_context(al) = ctx;
-  then arg_list_context(tail) = ctx;
+    if cons_arg_list_node(al, _, _, tail);
+    if arg_list_context(al) = ctx;
+    then arg_list_context(tail) = ctx;
 }
 rule {
-  if cons_stmt_list_node(stmts, head, tail);
-  if stmts_type_context(stmts) = ctx;
-  then stmt_type_context(head) = ctx;
-  then stmts_type_context(tail) = ctx;
+    if cons_stmt_list_node(stmts, head, tail);
+    if stmts_type_context(stmts) = ctx;
+    then stmt_type_context(head) = ctx;
+    then stmts_type_context(tail) = ctx;
 }
 rule {
-  if cons_expr_list_node(stmts, head, tail);
-  if exprs_type_context(stmts) = ctx;
-  then expr_type_context(head) = ctx;
-  then exprs_type_context(tail) = ctx;
+    if cons_expr_list_node(stmts, head, tail);
+    if exprs_type_context(stmts) = ctx;
+    then expr_type_context(head) = ctx;
+    then exprs_type_context(tail) = ctx;
 }
 
 // Module type contexts propagate into top level statements.
 rule {
-  if module(mn, stmts);
-  if ctx = module_type_context(mn);
-  then stmts_type_context(stmts) = ctx;
+    if module(mn, stmts);
+    if ctx = module_type_context(mn);
+    then stmts_type_context(stmts) = ctx;
 }
 
 // Function type contexts propagate into bodies.
 rule {
-  if function(fn, _, arg_list, _, stmts);
-  if ctx = function_type_context(fn);
-  then stmts_type_context(stmts) = ctx;
-  then arg_list_context(arg_list) = ctx;
+    if function(fn, _, arg_list, _, stmts);
+    if ctx = function_type_context(fn);
+    then stmts_type_context(stmts) = ctx;
+    then arg_list_context(arg_list) = ctx;
 }
 
 // ## Propagate type contexts through statements.
 rule {
-  if expr_stmt_node(stmt, expr);
-  if ctx = stmt_type_context(stmt);
-  then expr_type_context(expr) = ctx;
+    if expr_stmt_node(stmt, expr);
+    if ctx = stmt_type_context(stmt);
+    then expr_type_context(expr) = ctx;
 }
 rule {
-  if let_stmt_node(stmt, _, _, expr);
-  if ctx = stmt_type_context(stmt);
-  then expr_type_context(expr) = ctx;
+    if let_stmt_node(stmt, _, _, expr);
+    if ctx = stmt_type_context(stmt);
+    then expr_type_context(expr) = ctx;
 }
 rule {
-  if return_stmt_node(stmt, expr);
-  if ctx = stmt_type_context(stmt);
-  then expr_type_context(expr) = ctx;
+    if return_stmt_node(stmt, expr);
+    if ctx = stmt_type_context(stmt);
+    then expr_type_context(expr) = ctx;
 }
 rule {
-  if function_stmt_node(stmt, func_node);
-  if ambient_ctx = stmt_type_context(stmt);
-  if func_ctx = function_type_context(func_node);
-  then context_extension(ambient_ctx, func_ctx);
+    if function_stmt_node(stmt, func_node);
+    if ambient_ctx = stmt_type_context(stmt);
+    if func_ctx = function_type_context(func_node);
+    then context_extension(ambient_ctx, func_ctx);
 }
 rule {
-  if if_stmt_node(stmt, cond, true_branch, false_branch);
-  if stmt_ctx = stmt_type_context(stmt);
-  if cond_ctx = expr_type_context(cond);
-  if true_branch_ctx = stmts_type_context(true_branch);
-  if false_branch_ctx = stmts_type_context(false_branch);
-  then stmt_ctx = cond_ctx;
-  then cond_ctx = true_branch_ctx;
-  then true_branch_ctx = false_branch_ctx;
+    if if_stmt_node(stmt, cond, true_branch, false_branch);
+    if stmt_ctx = stmt_type_context(stmt);
+    if cond_ctx = expr_type_context(cond);
+    if true_branch_ctx = stmts_type_context(true_branch);
+    if false_branch_ctx = stmts_type_context(false_branch);
+    then stmt_ctx = cond_ctx;
+    then cond_ctx = true_branch_ctx;
+    then true_branch_ctx = false_branch_ctx;
 }
 rule {
-  if while_stmt_node(stmt, cond, body);
-  if stmt_ctx = stmt_type_context(stmt);
-  if cond_ctx = expr_type_context(cond);
-  if body_ctx = stmts_type_context(body);
-  then stmt_ctx = cond_ctx;
-  then cond_ctx = body_ctx;
+    if while_stmt_node(stmt, cond, body);
+    if stmt_ctx = stmt_type_context(stmt);
+    if cond_ctx = expr_type_context(cond);
+    if body_ctx = stmts_type_context(body);
+    then stmt_ctx = cond_ctx;
+    then cond_ctx = body_ctx;
 }
 
 // ## Propagate type contexts through expressions.
 
 rule {
-  if equals_expr_node(expr, lhs, rhs);
-  if expr_ctx = expr_type_context(expr);
-  if lhs_ctx = expr_type_context(lhs);
-  if rhs_ctx = expr_type_context(rhs);
-  then expr_ctx = lhs_ctx;
-  then lhs_ctx = rhs_ctx;
+    if equals_expr_node(expr, lhs, rhs);
+    if expr_ctx = expr_type_context(expr);
+    if lhs_ctx = expr_type_context(lhs);
+    if rhs_ctx = expr_type_context(rhs);
+    then expr_ctx = lhs_ctx;
+    then lhs_ctx = rhs_ctx;
 }
 
 rule {
-  if app_expr_node(expr, fn_expr, arg_exprs);
-  if expr_ctx = expr_type_context(expr);
-  if fn_ctx = expr_type_context(fn_expr);
-  if args_ctx = exprs_type_context(arg_exprs);
-  then expr_ctx = fn_ctx;
-  then fn_ctx = args_ctx;
+    if app_expr_node(expr, fn_expr, arg_exprs);
+    if expr_ctx = expr_type_context(expr);
+    if fn_ctx = expr_type_context(fn_expr);
+    if args_ctx = exprs_type_context(arg_exprs);
+    then expr_ctx = fn_ctx;
+    then fn_ctx = args_ctx;
 }
 
 rule {
-  if function_expr_node(expr, func_node);
-  if expr_ctx = expr_type_context(expr);
-  if func_ctx = function_type_context(func_node);
-  then context_extension(expr_ctx, func_ctx);
+    if function_expr_node(expr, func_node);
+    if expr_ctx = expr_type_context(expr);
+    if func_ctx = function_type_context(func_node);
+    then context_extension(expr_ctx, func_ctx);
 }
 
 // ## Type instantiation.
@@ -633,56 +633,56 @@ func instantiate(Instantiation, Type) -> Type;
 func instantiate_list(Instantiation, TypeList) -> TypeList;
 
 rule {
-  if instances = instantiate_list(_, nil_type_list());
-  then instances = nil_type_list();
+    if instances = instantiate_list(_, nil_type_list());
+    then instances = nil_type_list();
 }
 rule {
-  if instantiate_list(instance, cons_type_list(head, tail))!;
-  then instantiate(instance, head)!;
-  then instantiate_list(instance, tail)!;
+    if instantiate_list(instance, cons_type_list(head, tail))!;
+    then instantiate(instance, head)!;
+    then instantiate_list(instance, tail)!;
 }
 
 rule {
-  if head_instance = instantiate(instance, head);
-  if tail_instance = instantiate_list(instance, tail);
-  if instances = instantiate_list(instance, cons_type_list(head, tail));
-  then instances = cons_type_list(head_instance, tail_instance);
+    if head_instance = instantiate(instance, head);
+    if tail_instance = instantiate_list(instance, tail);
+    if instances = instantiate_list(instance, cons_type_list(head, tail));
+    then instances = cons_type_list(head_instance, tail_instance);
 }
 
 // ## Instantiation laws.
 rule {
-  if tau = instantiate(instance, sigma);
-  if type_in_context(sigma, instantiation_target(instance));
-  then sigma = tau;
+    if tau = instantiate(instance, sigma);
+    if type_in_context(sigma, instantiation_target(instance));
+    then sigma = tau;
 }
 
 rule {
-  if instance_void = instantiate(_, void_type());
-  then void_type() = instance_void;
+    if instance_void = instantiate(_, void_type());
+    then void_type() = instance_void;
 }
 rule {
-  if instance_boolean = instantiate(_, boolean_type());
-  then boolean_type() = instance_boolean;
+    if instance_boolean = instantiate(_, boolean_type());
+    then boolean_type() = instance_boolean;
 }
 rule {
-  if instance_number = instantiate(_, number_type());
-  then number_type() = instance_number;
+    if instance_number = instantiate(_, number_type());
+    then number_type() = instance_number;
 }
 rule {
-  if instance_string = instantiate(_, string_type());
-  then string_type() = instance_string;
+    if instance_string = instantiate(_, string_type());
+    then string_type() = instance_string;
 }
 
 rule {
-  if instantiate(instance, function_type(dom, cod))!;
-  then instantiate_list(instance, dom)!;
-  then instantiate(instance, cod)!;
+    if instantiate(instance, function_type(dom, cod))!;
+    then instantiate_list(instance, dom)!;
+    then instantiate(instance, cod)!;
 }
 rule {
-  if dom_instances = instantiate_list(instance, dom);
-  if cod_instance = instantiate(instance, cod);
-  if func_instance = instantiate(instance, function_type(dom, cod));
-  then function_type(dom_instances, cod_instance) = func_instance;
+    if dom_instances = instantiate_list(instance, dom);
+    if cod_instance = instantiate(instance, cod);
+    if func_instance = instantiate(instance, function_type(dom, cod));
+    then function_type(dom_instances, cod_instance) = func_instance;
 }
 
 
@@ -707,8 +707,8 @@ func poly_type(Type) -> GeneralType;
 // Declared earlier:
 // Func MonoType : Type -> GeneralType;
 rule {
-  if sigma: Type;
-  then mono_type(sigma)!;
+    if sigma: Type;
+    then mono_type(sigma)!;
 }
 
 func var_type_in_stmts(Var, StmtListNode) -> GeneralType;
@@ -722,44 +722,44 @@ func var_type_in_exprs(Var, ExprListNode) -> GeneralType;
 
 // Every let statements introduces a variable.
 rule {
-  if cons_stmt_list_node(_, head, tail);
-  if let_stmt_node(head, var, ty_annot, expr);
-  if ty = semantic_opt_type(ty_annot);
-  if expr_type = expr_type(expr);
-  if mono_expr_type = mono_type(expr_type);
-  then expr_type = ty;
-  then var_type_in_stmts(var, tail) = mono_expr_type;
+    if cons_stmt_list_node(_, head, tail);
+    if let_stmt_node(head, var, ty_annot, expr);
+    if ty = semantic_opt_type(ty_annot);
+    if expr_type = expr_type(expr);
+    if mono_expr_type = mono_type(expr_type);
+    then expr_type = ty;
+    then var_type_in_stmts(var, tail) = mono_expr_type;
 }
 
 // Every function statement introduces a variable for statements occuring after the function
 // statement.
 rule {
-  if cons_stmt_list_node(_, head, _);
-  if function_stmt_node(head, func_node);
-  if function(func_node, _, _, _, _);
-  then poly_type(function_node_type(func_node))!;
+    if cons_stmt_list_node(_, head, _);
+    if function_stmt_node(head, func_node);
+    if function(func_node, _, _, _, _);
+    then poly_type(function_node_type(func_node))!;
 }
 rule {
-  if cons_stmt_list_node(_, head, tail);
-  if function_stmt_node(head, func_node);
-  if function(func_node, var, _, _, _);
-  if ty = poly_type(function_node_type(func_node));
-  then var_type_in_stmts(var, tail) = ty;
+    if cons_stmt_list_node(_, head, tail);
+    if function_stmt_node(head, func_node);
+    if function(func_node, var, _, _, _);
+    if ty = poly_type(function_node_type(func_node));
+    then var_type_in_stmts(var, tail) = ty;
 }
 
 // Every function node introduces the name of the function in the ArgListNode of the function (and
 // hence, by the propagation axioms below, also in the body of the function).
 rule {
-  if function(func_node, var, arg, _, _);
-  if ty = mono_type(function_node_type(func_node));
-  then var_type_in_arg_list(var, arg) = ty;
+    if function(func_node, var, arg, _, _);
+    if ty = mono_type(function_node_type(func_node));
+    then var_type_in_arg_list(var, arg) = ty;
 }
 
 // Every function argument introduces a variable.
 rule {
-  if cons_arg_list_node(_, var, otn, tail);
-  if ty = mono_type(semantic_opt_type(otn));
-  then var_type_in_arg_list(var, tail) = ty;
+    if cons_arg_list_node(_, var, otn, tail);
+    if ty = mono_type(semantic_opt_type(otn));
+    then var_type_in_arg_list(var, tail) = ty;
 }
 
 // ## Errors due to multiple introductions of the same variable
@@ -768,27 +768,27 @@ rule {
 // scope before the node.
 
 rule {
-  if cons_stmt_list_node(stmts, head, _);
-  if let_stmt_node(head, var, _, _);
-  if var_type_in_stmts(var, stmts)!;
-  then variable_shadowing();
+    if cons_stmt_list_node(stmts, head, _);
+    if let_stmt_node(head, var, _, _);
+    if var_type_in_stmts(var, stmts)!;
+    then variable_shadowing();
 }
 rule {
-  if function_stmt_node(head, func_node);
-  if function(func_node, var, _, _, _);
-  if var_type_in_stmts(var, stmts)!;
-  if cons_stmt_list_node(stmts, head, _);
-  then variable_shadowing();
+    if function_stmt_node(head, func_node);
+    if function(func_node, var, _, _, _);
+    if var_type_in_stmts(var, stmts)!;
+    if cons_stmt_list_node(stmts, head, _);
+    then variable_shadowing();
 }
 rule {
-  if function(func_node, var, _, _, _);
-  if var_type_in_function(var, func_node)!;
-  then variable_shadowing();
+    if function(func_node, var, _, _, _);
+    if var_type_in_function(var, func_node)!;
+    then variable_shadowing();
 }
 rule {
-  if cons_arg_list_node(al, var, _, _);
-  if var_type_in_arg_list(var, al)!;
-  then variable_shadowing();
+    if cons_arg_list_node(al, var, _, _);
+    if var_type_in_arg_list(var, al)!;
+    then variable_shadowing();
 }
 
 // ## Propagation of variables through lists
@@ -796,20 +796,20 @@ rule {
 // If a variable is in scope for ConsX(head, tail), then it should also be in scope for tail.
 
 rule {
-  if cons_stmt_list_node(stmts, _, tail);
-  if sigma = var_type_in_stmts(var, stmts);
-  then var_type_in_stmts(var, tail) = sigma;
+    if cons_stmt_list_node(stmts, _, tail);
+    if sigma = var_type_in_stmts(var, stmts);
+    then var_type_in_stmts(var, tail) = sigma;
 }
 rule {
-  if cons_arg_list_node(al, _, _, tail);
-  if sigma = var_type_in_arg_list(var, al);
-  then var_type_in_arg_list(var, tail) = sigma;
+    if cons_arg_list_node(al, _, _, tail);
+    if sigma = var_type_in_arg_list(var, al);
+    then var_type_in_arg_list(var, tail) = sigma;
 }
 rule {
-  if cons_expr_list_node(exprs, head, tail);
-  if sigma = var_type_in_exprs(var, exprs);
-  then var_type_in_expr(var, head) = sigma;
-  then var_type_in_exprs(var, tail) = sigma;
+    if cons_expr_list_node(exprs, head, tail);
+    if sigma = var_type_in_exprs(var, exprs);
+    then var_type_in_expr(var, head) = sigma;
+    then var_type_in_exprs(var, tail) = sigma;
 }
 
 // ## Propagating variables through nodes
@@ -829,9 +829,9 @@ rule {
 
 // Propagate ambient variables into arg lists.
 rule {
-  if function(func_node, _, args, _, _);
-  if sigma = var_type_in_function(var, func_node);
-  then var_type_in_arg_list(var, args) = sigma;
+    if function(func_node, _, args, _, _);
+    if sigma = var_type_in_function(var, func_node);
+    then var_type_in_arg_list(var, args) = sigma;
 }
 
 // By the "end" of a node list l we mean the unique nil node from which l can be obtained by
@@ -839,21 +839,21 @@ rule {
 // variables introduced in that arg list.
 pred arg_list_end(ArgListNode, ArgListNode);
 rule {
-  if nil_arg_list_node(arg_list);
-  then arg_list_end(arg_list, arg_list);
+    if nil_arg_list_node(arg_list);
+    then arg_list_end(arg_list, arg_list);
 }
 rule {
-  if cons_arg_list_node(arg_list, _, _, tail);
-  if arg_list_end(tail, end);
-  then arg_list_end(arg_list, end);
+    if cons_arg_list_node(arg_list, _, _, tail);
+    if arg_list_end(tail, end);
+    then arg_list_end(arg_list, end);
 }
 
 // Propagate variables from the arg list into the body.
 rule {
-  if function(_, _, args, _, body);
-  if arg_list_end(args, args_end);
-  if sigma = var_type_in_arg_list(var, args_end);
-  then var_type_in_stmts(var, body) = sigma;
+    if function(_, _, args, _, body);
+    if arg_list_end(args, args_end);
+    if sigma = var_type_in_arg_list(var, args_end);
+    then var_type_in_stmts(var, body) = sigma;
 }
 
 // ### Propagating variables through statements
@@ -861,78 +861,78 @@ rule {
 // If a variable is in scope in the statement that defines a function, then the variable is also in
 // scope of the ArgListNode of that function (which then means that it is in scope for the body).
 rule {
-  if cons_stmt_list_node(stmts, head, _);
-  if function_stmt_node(head, func_node);
-  if sigma = var_type_in_stmts(var, stmts);
-  then var_type_in_function(var, func_node) = sigma;
+    if cons_stmt_list_node(stmts, head, _);
+    if function_stmt_node(head, func_node);
+    if sigma = var_type_in_stmts(var, stmts);
+    then var_type_in_function(var, func_node) = sigma;
 }
 
 // Propagate variables through if statements.
 rule {
-  if cons_stmt_list_node(stmts, head, _);
-  if if_stmt_node(head, cond, true_branch, false_branch);
-  if sigma = var_type_in_stmts(var, stmts);
-  then var_type_in_expr(var, cond) = sigma;
-  then var_type_in_stmts(var, true_branch) = sigma;
-  then var_type_in_stmts(var, false_branch) = sigma;
+    if cons_stmt_list_node(stmts, head, _);
+    if if_stmt_node(head, cond, true_branch, false_branch);
+    if sigma = var_type_in_stmts(var, stmts);
+    then var_type_in_expr(var, cond) = sigma;
+    then var_type_in_stmts(var, true_branch) = sigma;
+    then var_type_in_stmts(var, false_branch) = sigma;
 }
 
 // Propagate variables through while statements.
 rule {
-  if cons_stmt_list_node(stmts, head, _);
-  if while_stmt_node(head, cond, body);
-  if sigma = var_type_in_stmts(var, stmts);
-  then var_type_in_stmts(var, body) = sigma;
-  then var_type_in_expr(var, cond) = sigma;
+    if cons_stmt_list_node(stmts, head, _);
+    if while_stmt_node(head, cond, body);
+    if sigma = var_type_in_stmts(var, stmts);
+    then var_type_in_stmts(var, body) = sigma;
+    then var_type_in_expr(var, cond) = sigma;
 }
 
 // Propagate variables through expression statements.
 rule {
-  if cons_stmt_list_node(stmts, head, _);
-  if expr_stmt_node(head, expr);
-  if sigma = var_type_in_stmts(var, stmts);
-  then var_type_in_expr(var, expr) = sigma;
+    if cons_stmt_list_node(stmts, head, _);
+    if expr_stmt_node(head, expr);
+    if sigma = var_type_in_stmts(var, stmts);
+    then var_type_in_expr(var, expr) = sigma;
 }
 
 // Propagate previously defined variables through let statements into initializer expressions.
 rule {
-  if cons_stmt_list_node(stmts, head, _);
-  if let_stmt_node(head, _, _, expr);
-  if sigma = var_type_in_stmts(var, stmts);
-  then var_type_in_expr(var, expr) = sigma;
+    if cons_stmt_list_node(stmts, head, _);
+    if let_stmt_node(head, _, _, expr);
+    if sigma = var_type_in_stmts(var, stmts);
+    then var_type_in_expr(var, expr) = sigma;
 }
 
 // Propagate variables through return statements.
 rule {
-  if cons_stmt_list_node(stmts, head, _);
-  if return_stmt_node(head, expr);
-  if sigma = var_type_in_stmts(var, stmts);
-  then var_type_in_expr(var, expr) = sigma;
+    if cons_stmt_list_node(stmts, head, _);
+    if return_stmt_node(head, expr);
+    if sigma = var_type_in_stmts(var, stmts);
+    then var_type_in_expr(var, expr) = sigma;
 }
 
 // ### Propagating variables through expressions
 
 // Propagate variables through equality expressions.
 rule {
-  if equals_expr_node(expr, lhs, rhs);
-  if sigma = var_type_in_expr(var, expr);
-  then var_type_in_expr(var, lhs) = sigma;
-  then var_type_in_expr(var, rhs) = sigma;
+    if equals_expr_node(expr, lhs, rhs);
+    if sigma = var_type_in_expr(var, expr);
+    then var_type_in_expr(var, lhs) = sigma;
+    then var_type_in_expr(var, rhs) = sigma;
 }
 
 // Propagate variables through function application expressions.
 rule {
-  if app_expr_node(expr, func_node, args);
-  if sigma = var_type_in_expr(var, expr);
-  then var_type_in_expr(var, func_node) = sigma;
-  then var_type_in_exprs(var, args) = sigma;
+    if app_expr_node(expr, func_node, args);
+    if sigma = var_type_in_expr(var, expr);
+    then var_type_in_expr(var, func_node) = sigma;
+    then var_type_in_exprs(var, args) = sigma;
 }
 
 // Propagate variables through function expression.
 rule {
-  if function_expr_node(expr, func_node);
-  if sigma = var_type_in_expr(var, expr);
-  then var_type_in_function(var, func_node) = sigma;
+    if function_expr_node(expr, func_node);
+    if sigma = var_type_in_expr(var, expr);
+    then var_type_in_function(var, func_node) = sigma;
 }
 
 // # Expression typing.
@@ -950,90 +950,90 @@ func expr_instantiation(ExprNode) -> Instantiation;
 // ExprType on each ExprNode element.
 
 rule {
-  if nil_expr_list_node(exprs);
-  if ntl = nil_type_list();
-  then expr_types(exprs) = ntl;
+    if nil_expr_list_node(exprs);
+    if ntl = nil_type_list();
+    then expr_types(exprs) = ntl;
 }
 rule {
-  if cons_expr_list_node(exprs, head, tail);
-  if tys = expr_types(exprs);
-  if head_ty = expr_type(head);
-  if tail_tys = expr_types(tail);
-  then cons_type_list(head_ty, tail_tys) = tys;
+    if cons_expr_list_node(exprs, head, tail);
+    if tys = expr_types(exprs);
+    if head_ty = expr_type(head);
+    if tail_tys = expr_types(tail);
+    then cons_type_list(head_ty, tail_tys) = tys;
 }
 
 // ## Typing constraints from usage of expressions in statements.
 rule {
-  if if_stmt_node(_, cond, _, _);
-  if et = expr_type(cond);
-  then et = boolean_type();
+    if if_stmt_node(_, cond, _, _);
+    if et = expr_type(cond);
+    then et = boolean_type();
 }
 rule {
-  if while_stmt_node(_, cond, _);
-  if et = expr_type(cond);
-  then et = boolean_type();
+    if while_stmt_node(_, cond, _);
+    if et = expr_type(cond);
+    then et = boolean_type();
 }
 
 // ## Typing constraints of expression from usages in other expression.
 rule {
-  if variable_expr_node(expr, var);
-  if var_type_in_expr(var, expr) = mono_type(sigma);
-  then expr_type(expr) = sigma;
+    if variable_expr_node(expr, var);
+    if var_type_in_expr(var, expr) = mono_type(sigma);
+    then expr_type(expr) = sigma;
 }
 
 rule {
-  if variable_expr_node(expr, var);
-  if var_type_in_expr(var, expr) = poly_type(_);
-  then expr_instantiation(expr)!;
+    if variable_expr_node(expr, var);
+    if var_type_in_expr(var, expr) = poly_type(_);
+    then expr_instantiation(expr)!;
 }
 rule {
-  if variable_expr_node(expr, var);
-  if var_type_in_expr(var, expr) = poly_type(_);
-  if instance = expr_instantiation(expr);
-  if ctx = expr_type_context(expr);
-  then instantiation_target(instance) = ctx;
+    if variable_expr_node(expr, var);
+    if var_type_in_expr(var, expr) = poly_type(_);
+    if instance = expr_instantiation(expr);
+    if ctx = expr_type_context(expr);
+    then instantiation_target(instance) = ctx;
 }
 rule {
-  if variable_expr_node(expr, var);
-  if var_type_in_expr(var, expr) = poly_type(sigma);
-  if instance = expr_instantiation(expr);
-  if expr_ty = expr_type(expr);
-  then instantiate(instance, sigma) = expr_ty;
-}
-
-rule {
-  if void_expr_node(expr);
-  if et = expr_type(expr);
-  then et = void_type();
-}
-rule {
-  if false_expr_node(expr);
-  if et = expr_type(expr);
-  then et = boolean_type();
-}
-rule {
-  if true_expr_node(expr);
-  if et = expr_type(expr);
-  then et = boolean_type();
-}
-rule {
-  if string_literal_expr_node(expr, _);
-  if et = expr_type(expr);
-  then et = string_type();
-}
-rule {
-  if number_literal_expr_node(expr, _);
-  if et = expr_type(expr);
-  then et = number_type();
+    if variable_expr_node(expr, var);
+    if var_type_in_expr(var, expr) = poly_type(sigma);
+    if instance = expr_instantiation(expr);
+    if expr_ty = expr_type(expr);
+    then instantiate(instance, sigma) = expr_ty;
 }
 
 rule {
-  if equals_expr_node(eq, lhs, rhs);
-  if eq_type = expr_type(eq);
-  if lhs_type = expr_type(lhs);
-  if rhs_type = expr_type(rhs);
-  then eq_type = boolean_type();
-  then lhs_type = rhs_type;
+    if void_expr_node(expr);
+    if et = expr_type(expr);
+    then et = void_type();
+}
+rule {
+    if false_expr_node(expr);
+    if et = expr_type(expr);
+    then et = boolean_type();
+}
+rule {
+    if true_expr_node(expr);
+    if et = expr_type(expr);
+    then et = boolean_type();
+}
+rule {
+    if string_literal_expr_node(expr, _);
+    if et = expr_type(expr);
+    then et = string_type();
+}
+rule {
+    if number_literal_expr_node(expr, _);
+    if et = expr_type(expr);
+    then et = number_type();
+}
+
+rule {
+    if equals_expr_node(eq, lhs, rhs);
+    if eq_type = expr_type(eq);
+    if lhs_type = expr_type(lhs);
+    if rhs_type = expr_type(rhs);
+    then eq_type = boolean_type();
+    then lhs_type = rhs_type;
 }
   
 
@@ -1041,20 +1041,20 @@ rule {
 // types tau. By the axioms relating these functions to FunctionType, this means that such types
 // tau must be function types.
 rule {
-  if app_expr_node(expr, func_node, args);
-  if res_ty = expr_type(expr);
-  if func_ty = expr_type(func_node);
-  if arg_tys = expr_types(args);
-  then arg_tys = domain_types(func_ty);
-  then res_ty = codomain_type(func_ty);
+    if app_expr_node(expr, func_node, args);
+    if res_ty = expr_type(expr);
+    if func_ty = expr_type(func_node);
+    if arg_tys = expr_types(args);
+    then arg_tys = domain_types(func_ty);
+    then res_ty = codomain_type(func_ty);
 }
 
 // No need to instantiate the type of a function expression: Since it would be instantiated only
 // once anyway, we can directly equate the function node type with the expression type.
 rule {
-  if function_expr_node(expr, func_node);
-  if func_ty = function_node_type(func_node);
-  then expr_type(expr) = func_ty;
+    if function_expr_node(expr, func_node);
+    if func_ty = function_node_type(func_node);
+    then expr_type(expr) = func_ty;
 }
 
 // # Type analysis of function definitions
@@ -1082,44 +1082,44 @@ pred can_proceed_stmt(StmtNode);
 pred can_proceed_stmts(StmtListNode);
 
 rule {
-  if nil_stmt_list_node(stmts);
-  then can_proceed_stmts(stmts);
+    if nil_stmt_list_node(stmts);
+    then can_proceed_stmts(stmts);
 }
 rule {
-  if cons_stmt_list_node(stmts, head, tail);
-  if can_proceed_stmt(head);
-  if can_proceed_stmts(tail);
-  then can_proceed_stmts(stmts);
+    if cons_stmt_list_node(stmts, head, tail);
+    if can_proceed_stmt(head);
+    if can_proceed_stmts(tail);
+    then can_proceed_stmts(stmts);
 }
 
 rule {
-  if expr_stmt_node(stmt, _);
-  then can_proceed_stmt(stmt);
+    if expr_stmt_node(stmt, _);
+    then can_proceed_stmt(stmt);
 }
 rule {
-  if let_stmt_node(stmt, _, _, _);
-  then can_proceed_stmt(stmt);
+    if let_stmt_node(stmt, _, _, _);
+    then can_proceed_stmt(stmt);
 }
 // ReturnStmtNode does not proceed.
 // ReturnVoidStmtNode does not proceed.
 rule {
-  if function_stmt_node(stmt, _);
-  then can_proceed_stmt(stmt);
+    if function_stmt_node(stmt, _);
+    then can_proceed_stmt(stmt);
 }
 // An IfStmtNode can proceed if at least one of the two branches can proceed.
 rule {
-  if if_stmt_node(stmt, _, true_branch, _);
-  if can_proceed_stmts(true_branch);
-  then can_proceed_stmt(stmt);
+    if if_stmt_node(stmt, _, true_branch, _);
+    if can_proceed_stmts(true_branch);
+    then can_proceed_stmt(stmt);
 }
 rule {
-  if if_stmt_node(stmt, _, _, false_branch);
-  if can_proceed_stmts(false_branch);
-  then can_proceed_stmt(stmt);
+    if if_stmt_node(stmt, _, _, false_branch);
+    if can_proceed_stmts(false_branch);
+    then can_proceed_stmt(stmt);
 }
 rule {
-  if while_stmt_node(stmt, _, _);
-  then can_proceed_stmt(stmt);
+    if while_stmt_node(stmt, _, _);
+    then can_proceed_stmt(stmt);
 }
 
 // ## Explicit return type analysis
@@ -1134,50 +1134,50 @@ func returns_type(StmtListNode) -> Type;
 // If there is any suffix of a statement list that can return a given type, then the full list can
 // return that type.
 rule {
-  if cons_stmt_list_node(stmts, _, tail);
-  if rt = returns_type(tail);
-  then rt = returns_type(stmts);
+    if cons_stmt_list_node(stmts, _, tail);
+    if rt = returns_type(tail);
+    then rt = returns_type(stmts);
 }
 
 // Base cases for return statements with and without (i.e. void) expressions.
 rule {
-  if cons_stmt_list_node(stmts, head, _);
-  if return_stmt_node(head, return_value);
-  if et = expr_type(return_value);
-  then returns_type(stmts) = et;
+    if cons_stmt_list_node(stmts, head, _);
+    if return_stmt_node(head, return_value);
+    if et = expr_type(return_value);
+    then returns_type(stmts) = et;
 }
 
 rule {
-  if return_void_stmt_node(_);
-  then void_type()!;
+    if return_void_stmt_node(_);
+    then void_type()!;
 }
 rule {
-  if cons_stmt_list_node(stmts, head, _);
-  if return_void_stmt_node(head);
-  if vt = void_type();
-  then returns_type(stmts) = vt;
+    if cons_stmt_list_node(stmts, head, _);
+    if return_void_stmt_node(head);
+    if vt = void_type();
+    then returns_type(stmts) = vt;
 }
 
 // An if statement can return a type if at least one of its two branches returns that type.
 rule {
-  if cons_stmt_list_node(stmts, head, _);
-  if if_stmt_node(head, _, true_branch, _);
-  if rt = returns_type(true_branch);
-  then returns_type(stmts) = rt;
+    if cons_stmt_list_node(stmts, head, _);
+    if if_stmt_node(head, _, true_branch, _);
+    if rt = returns_type(true_branch);
+    then returns_type(stmts) = rt;
 }
 rule {
-  if cons_stmt_list_node(stmts, head, _);
-  if if_stmt_node(head, _, _, false_branch);
-  if rt = returns_type(false_branch);
-  then returns_type(stmts) = rt;
+    if cons_stmt_list_node(stmts, head, _);
+    if if_stmt_node(head, _, _, false_branch);
+    if rt = returns_type(false_branch);
+    then returns_type(stmts) = rt;
 }
 
 // A while statement can return a type if its body can return that type.
 rule {
-  if cons_stmt_list_node(stmts, head, _);
-  if while_stmt_node(head, _, body);
-  if rt = returns_type(body);
-  then returns_type(stmts) = rt;
+    if cons_stmt_list_node(stmts, head, _);
+    if while_stmt_node(head, _, body);
+    if rt = returns_type(body);
+    then returns_type(stmts) = rt;
 }
 
 // ## Tying it together.
@@ -1187,9 +1187,9 @@ rule {
 
 // FunctionNodeType is always a function type.
 rule {
-  if ft = function_node_type(_);
-  then domain_types(ft)!;
-  then codomain_type(ft)!;
+    if ft = function_node_type(_);
+    then domain_types(ft)!;
+    then codomain_type(ft)!;
 }
 
 // Typing constraints due to the types of function variables. Note that the types of argument
@@ -1197,32 +1197,32 @@ rule {
 // opaque Type element if no annotation was given), which in turn were unified with the types
 // appearing in SemanticArgTypes.
 rule {
-  if function(func_node, _, args, _, _);
-  if dom = domain_types(function_node_type(func_node));
-  then semantic_arg_types(args) = dom;
+    if function(func_node, _, args, _, _);
+    if dom = domain_types(function_node_type(func_node));
+    then semantic_arg_types(args) = dom;
 }
 
 // Typing constraints due to an explicit codomain annotation.
 rule {
-  if function(func_node, _, _, cod, _);
-  if ft = function_node_type(func_node);
-  if sot = semantic_opt_type(cod);
-  then codomain_type(ft) = sot;
+    if function(func_node, _, _, cod, _);
+    if ft = function_node_type(func_node);
+    if sot = semantic_opt_type(cod);
+    then codomain_type(ft) = sot;
 }
 
 // Typing constraints due to explicit return statements.
 rule {
-  if function(func_node, _, _, _, body);
-  if ft = function_node_type(func_node);
-  if rt = returns_type(body);
-  then rt = codomain_type(ft);
+    if function(func_node, _, _, _, body);
+    if ft = function_node_type(func_node);
+    if rt = returns_type(body);
+    then rt = codomain_type(ft);
 }
 
 // An implicit Void return type in case we cannot infer that the function body must
 // always reach an explicit return statement.
 rule {
-  if function(func_node, _, _, _, body);
-  if can_proceed_stmts(body);
-  if cod = codomain_type(function_node_type(func_node));
-  then cod = void_type();
+    if function(func_node, _, _, _, body);
+    if can_proceed_stmts(body);
+    if cod = codomain_type(function_node_type(func_node));
+    then cod = void_type();
 }
