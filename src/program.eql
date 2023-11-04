@@ -737,6 +737,7 @@ rule {
     if cons_stmt_list_node(_, head, _);
     if function_stmt_node(head, func_node);
     if function(func_node, _, _, _, _);
+    then function_node_type(func_node)!;
     then poly_type(function_node_type(func_node))!;
 }
 rule {
